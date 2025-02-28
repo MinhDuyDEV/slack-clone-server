@@ -3,6 +3,7 @@ import * as Joi from 'joi';
 export const validationSchema = Joi.object({
   // Port
   PORT: Joi.number().default(8000),
+  API_PREFIX: Joi.string().default('api'),
 
   // Database
   DB_TYPE: Joi.string().required(),

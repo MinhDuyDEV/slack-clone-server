@@ -1,11 +1,14 @@
-import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { AppConfigService } from './config/config.service';
 import jwtConfig from './config/configurations/jwt.config';
 import databaseConfig from './config/configurations/database.config';
 import { validationSchema } from './config/validation/env.validation';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -35,8 +38,14 @@ import { validationSchema } from './config/validation/env.validation';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
+    UsersModule,
   ],
   providers: [AppConfigService],
   exports: [AppConfigService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

@@ -5,8 +5,11 @@ import { ConfigService } from '@nestjs/config';
 export class AppConfigService {
   constructor(private configService: ConfigService) {}
 
-  get port() {
-    return this.configService.get<number>('PORT');
+  get appConfig() {
+    return {
+      port: this.configService.get('app.port'),
+      apiPrefix: this.configService.get('app.apiPrefix'),
+    };
   }
 
   get corsConfig() {

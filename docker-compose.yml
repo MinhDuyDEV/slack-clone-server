@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: slack-clone-db
+    image: postgres:15-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=slack-clone
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - slack-network
+    restart: unless-stopped
+
+  redis:
+    container_name: slack-clone-redis
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - slack-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  slack-network:
+    driver: bridge

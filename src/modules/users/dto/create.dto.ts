@@ -1,10 +1,16 @@
-import { Matches } from 'class-validator';
-import { IsEmail } from 'class-validator';
-import { MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsEnum,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
-import { IsString, MinLength } from 'class-validator';
 
-export class RegisterDto {
+import { UserRole, UserStatus } from 'src/core/enums';
+
+export class CreateUserDto {
   @IsEmail()
   @Transform(({ value }) => value.toLowerCase())
   email: string;
@@ -26,4 +32,10 @@ export class RegisterDto {
   @MaxLength(32)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,}$/)
   password: string;
+
+  @IsEnum(UserStatus)
+  status: UserStatus;
+
+  @IsEnum(UserRole, { each: true })
+  roles: UserRole[];
 }

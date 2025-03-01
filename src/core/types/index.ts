@@ -1,10 +1,5 @@
 export type Nullable<T> = T | null;
 
-export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
-}
-
 export interface IPaginationOptions {
   page?: number;
   limit?: number;

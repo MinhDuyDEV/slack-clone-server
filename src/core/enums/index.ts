@@ -1,15 +1,13 @@
-export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
-  ADMIN = 'admin',
-  USER = 'user',
-  GUEST = 'guest',
+export enum UserStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  BANNED = 'BANNED',
 }
 
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  BLOCKED = 'blocked',
-  PENDING = 'pending',
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
 }
 
 export enum WorkspaceRole {
@@ -44,4 +42,22 @@ export enum NotificationType {
   THREAD = 'thread',
   CHANNEL = 'channel',
   WORKSPACE = 'workspace',
+}
+
+export enum TokenType {
+  ACCESS = 'access',
+  REFRESH = 'refresh',
+}
+
+export enum AuthProvider {
+  LOCAL = 'local',
+  GOOGLE = 'google',
+  GITHUB = 'github',
+}
+
+export enum LoginStatus {
+  SUCCESS = 'success',
+  INVALID_CREDENTIALS = 'invalid_credentials',
+  USER_NOT_FOUND = 'user_not_found',
+  USER_BLOCKED = 'user_blocked',
 }

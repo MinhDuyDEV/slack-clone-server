@@ -1,19 +1,19 @@
-import { IUser } from '../entities/user.interface';
-
-export interface IAuthPayload {
-  sub: string; // user id
-  email: string;
-}
-
-export interface ITokenResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+import { User } from 'src/modules/users/entities/user.entity';
+import { IDeviceInfo } from '../entities/device-info.interface';
+import { RegisterDto } from 'src/modules/auth/dto/register.dto';
+import { IAuthResponse } from '../entities/auth-response.interface';
+import { IRefreshTokenResponse } from '../entities/auth-response.interface';
 
 export interface IAuthService {
-  validateUser(email: string, password: string): Promise<IUser | null>;
-  login(user: IUser): Promise<ITokenResponse>;
-  register(userData: Partial<IUser>): Promise<IUser>;
-  refreshToken(token: string): Promise<ITokenResponse>;
-  logout(userId: string): Promise<void>;
+  register(
+    registerDto: RegisterDto,
+    deviceInfo?: IDeviceInfo,
+  ): Promise<IAuthResponse>;
+  login(user: User, deviceInfo?: IDeviceInfo): Promise<IAuthResponse>;
+  logout(userId: string, refreshToken: string): Promise<void>;
+  refreshToken(
+    refreshToken: string,
+    deviceInfo?: IDeviceInfo,
+  ): Promise<IRefreshTokenResponse>;
+  validateUser(email: string, password: string): Promise<User | null>;
 }

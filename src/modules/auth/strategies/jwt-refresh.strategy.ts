@@ -1,0 +1,44 @@
+import { Request } from 'express';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+
+import { refresh_token_public_key } from 'src/common/utils/keys.util';
+import { ITokenPayload } from 'src/core/interfaces/entities/token-payload.interface';
+import { IUserRepository } from 'src/core/interfaces/repositories/user.repository.interface';
+
+@Injectable()
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
+  constructor(
+    @Inject('IUserRepository')
+    private readonly userRepository: IUserRepository,
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
+      ignoreExpiration: false,
+      secretOrKey: refresh_token_public_key,
+      algorithms: ['RS256'],
+      passReqToCallback: true,
+    });
+  }
+
+  async validate(req: Request, payload: ITokenPayload) {
+    if (payload.type !== 'refresh') {
+      throw new UnauthorizedException('Invalid token type');
+    }
+    const refreshToken = req.body.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    const user = await this.userRepository.findById(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
+}

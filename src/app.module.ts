@@ -1,3 +1,4 @@
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,6 +7,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AppConfigService } from './config/config.service';
 import jwtConfig from './config/configurations/jwt.config';
+import appConfig from './config/configurations/app.config';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import databaseConfig from './config/configurations/database.config';
 import { validationSchema } from './config/validation/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
@@ -15,7 +18,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [databaseConfig, jwtConfig],
+      load: [databaseConfig, jwtConfig, appConfig],
       validationSchema,
       validationOptions: {
         allowUnknown: true,
@@ -41,7 +44,13 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     AuthModule,
     UsersModule,
   ],
-  providers: [AppConfigService],
+  providers: [
+    AppConfigService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
   exports: [AppConfigService],
 })
 export class AppModule {

@@ -1,3 +1,4 @@
+import { RefreshToken } from 'src/modules/auth/entities/refresh-token.entity';
 import { UserRole, UserStatus } from '../../enums';
 import { IBaseEntity } from './base.interface';
 import { IChannel } from './channel.interface';
@@ -5,10 +6,14 @@ import { IDirectMessage } from './direct-message.interface';
 import { IWorkspace } from './workspace.interface';
 
 export interface IUser extends IBaseEntity {
+  id: string;
   email: string;
-  password?: string;
   username: string;
-  fullName: string;
+  password?: string;
+  provider?: 'local' | 'google' | 'facebook';
+  providerId?: string;
+  refreshTokens: RefreshToken[];
+  displayName?: string;
 
   avatar?: string;
   bio?: string;
@@ -49,4 +54,7 @@ export interface IUser extends IBaseEntity {
 
   lastLoginAt?: Date;
   lastPasswordChangeAt?: Date;
+
+  hashPassword(): Promise<void>;
+  comparePassword(password: string): Promise<boolean>;
 }

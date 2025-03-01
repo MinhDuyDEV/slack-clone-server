@@ -5,16 +5,11 @@ export enum UserStatus {
   BANNED = 'BANNED',
 }
 
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-}
-
 export enum WorkspaceRole {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  MEMBER = 'member',
-  GUEST = 'guest',
+  OWNER = 'OWNER',
+  ADMIN = 'ADMIN',
+  MEMBER = 'MEMBER',
+  GUEST = 'GUEST',
 }
 
 export enum ChannelType {

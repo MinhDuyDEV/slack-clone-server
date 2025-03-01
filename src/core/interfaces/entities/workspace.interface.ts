@@ -1,3 +1,4 @@
+import { WorkspaceRole } from 'src/core/enums';
 import { IBaseEntity } from './base.interface';
 import { IChannel } from './channel.interface';
 
@@ -22,7 +23,7 @@ export interface IWorkspace extends IBaseEntity {
 export interface IWorkspaceMember extends IBaseEntity {
   workspaceId: string;
   userId: string;
-  role: 'owner' | 'admin' | 'member' | 'guest';
+  role: WorkspaceRole;
   status: 'active' | 'inactive' | 'invited';
   joinedAt: Date;
   invitedBy?: string;

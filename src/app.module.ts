@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import databaseConfig from './config/configurations/database.config';
 import { validationSchema } from './config/validation/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     }),
     AuthModule,
     UsersModule,
+    WorkspacesModule,
   ],
   providers: [
     AppConfigService,

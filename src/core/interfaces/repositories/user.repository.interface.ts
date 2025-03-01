@@ -1,11 +1,11 @@
 import { IBaseRepository } from './base.repository.interface';
-import { IUser } from '../entities/user.interface';
+import { User } from 'src/modules/users/entities/user.entity';
 import { FindOptionsWhere } from 'typeorm';
 
-export interface IUserRepository extends IBaseRepository<IUser> {
+export interface IUserRepository extends IBaseRepository<User> {
   findOneWithOption(options: {
-    where: FindOptionsWhere<IUser>[];
-  }): Promise<IUser | null>;
-  findByEmail(email: string): Promise<IUser | null>;
-  findByEmailWithPassword(email: string): Promise<IUser | null>;
+    where: FindOptionsWhere<User>[];
+  }): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
+  findByEmailWithPassword(email: string): Promise<User | null>;
 }

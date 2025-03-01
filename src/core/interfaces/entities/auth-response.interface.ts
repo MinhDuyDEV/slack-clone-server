@@ -1,7 +1,16 @@
-import { IUser } from '../entities/user.interface';
+import { UserStatus } from 'src/core/enums';
 
 export interface IAuthResponse {
-  user: Omit<IUser, 'password'>;
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    displayName?: string;
+    avatar?: string;
+    status: UserStatus;
+    isEmailVerified: boolean;
+    createdAt: Date;
+  };
   tokens: ITokens;
 }
 

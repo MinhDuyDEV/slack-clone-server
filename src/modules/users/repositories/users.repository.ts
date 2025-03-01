@@ -33,7 +33,7 @@ export class UsersRepository
   async findByEmailWithPassword(email: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { email: email.toLowerCase() },
-      select: ['id', 'email', 'password', 'roles', 'status'],
+      select: ['id', 'email', 'password', 'status'],
     });
   }
 }

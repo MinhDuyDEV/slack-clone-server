@@ -17,14 +17,11 @@ import {
   IAuthResponse,
   IRefreshTokenResponse,
 } from 'src/core/interfaces/entities/auth-response.interface';
-import { UserRole } from 'src/core/enums';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RolesGuard } from './guards/roles.guard';
 import { User } from '../users/entities/user.entity';
 import { LocalAuthGuard } from './guards/local.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
@@ -94,12 +91,5 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   verifyToken(@CurrentUser() user: User): { userId: string } {
     return { userId: user.id };
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get('admin-only')
-  adminRoute() {
-    return 'This is an admin-only route';
   }
 }

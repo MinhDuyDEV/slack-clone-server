@@ -13,7 +13,7 @@ import { BeforeInsert } from 'typeorm';
 import { IUser } from 'src/core/interfaces/entities/user.interface';
 import { Entity } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserRole, UserStatus } from 'src/core/enums';
+import { UserStatus } from 'src/core/enums';
 import { RefreshToken } from 'src/modules/auth/entities/refresh-token.entity';
 
 @Entity('users')
@@ -53,14 +53,6 @@ export class User implements IUser {
 
   @Column({ nullable: true })
   timezone?: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    array: true,
-    default: [UserRole.USER],
-  })
-  roles: UserRole[];
 
   @Column({
     type: 'enum',

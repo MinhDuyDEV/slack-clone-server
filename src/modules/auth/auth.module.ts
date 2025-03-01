@@ -9,7 +9,6 @@ import {
   access_token_public_key,
 } from 'src/common/utils/keys.util';
 import { AuthService } from './auth.service';
-import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -50,7 +49,6 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repositoty'
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
-    RolesGuard,
   ],
 })
 export class AuthModule {}

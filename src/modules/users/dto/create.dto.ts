@@ -7,8 +7,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-
-import { UserRole, UserStatus } from 'src/core/enums';
+import { UserStatus } from 'src/core/enums';
 
 export class CreateUserDto {
   @IsEmail()
@@ -35,7 +34,4 @@ export class CreateUserDto {
 
   @IsEnum(UserStatus)
   status: UserStatus;
-
-  @IsEnum(UserRole, { each: true })
-  roles: UserRole[];
 }

@@ -18,7 +18,6 @@ import {
 } from 'src/core/interfaces/entities/auth-response.interface';
 import { User } from '../users/entities/user.entity';
 import { IDeviceInfo } from 'src/core/interfaces/entities/device-info.interface';
-import { UserRole } from 'src/core/enums';
 import { RegisterDto } from './dto/register.dto';
 import { UserStatus } from 'src/core/enums';
 import { ITokenPayload } from 'src/core/interfaces/entities/token-payload.interface';
@@ -89,7 +88,6 @@ export class AuthService implements IAuthService {
       const user = await this.userService.create({
         ...registerDto,
         status: UserStatus.PENDING,
-        roles: [UserRole.USER],
       });
 
       return this.login(user, deviceInfo);
@@ -156,7 +154,6 @@ export class AuthService implements IAuthService {
     const payload: Omit<ITokenPayload, 'type'> = {
       sub: user.id,
       email: user.email,
-      roles: user.roles,
     };
 
     const [accessToken, refreshToken] = await Promise.all([

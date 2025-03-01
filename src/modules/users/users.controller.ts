@@ -10,15 +10,12 @@ import {
   Inject,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { IUserService } from '../../core/interfaces/services/user.service.interface';
 import { CreateUserDto } from './dto/create.dto';
 import { UpdateUserDto } from './dto/update.dto';
-import { UserRole } from '../../core/enums';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(
     @Inject('IUserService')
@@ -31,7 +28,6 @@ export class UsersController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN)
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
@@ -42,7 +38,6 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
   async delete(@Param('id') id: string) {
     await this.userService.findById(id);
     return { message: 'User deleted successfully' };

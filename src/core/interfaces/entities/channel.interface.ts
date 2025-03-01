@@ -1,14 +1,23 @@
 import { IBaseEntity } from './base.interface';
 import { IMessage } from './message.interface';
+import { ChannelType } from 'src/core/enums';
+import { IUser } from './user.interface';
+import { IWorkspace } from './workspace.interface';
 
-export interface IChannel extends IBaseEntity {
+export interface IChannel {
+  id: string;
   name: string;
   description?: string;
-  type: 'public' | 'private' | 'direct';
-
+  type: ChannelType;
   workspaceId: string;
+  workspace: IWorkspace;
   createdBy: string;
-  members?: IChannelMember[];
+  creator: IUser;
+  isPrivate: boolean;
+  members?: IUser[];
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date;
   messages?: IMessage[];
 
   settings?: {

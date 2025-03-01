@@ -219,6 +219,12 @@ export class AuthService implements IAuthService {
       });
     } catch (error) {
       this.logger.error(`Error verifying refresh token: ${error.message}`);
+
+      // Check if token is expired
+      if (error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

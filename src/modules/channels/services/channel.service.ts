@@ -57,7 +57,9 @@ export class ChannelService implements IChannelService {
   }
 
   async addMember(channelId: string, userId: string): Promise<void> {
-    const channel = await this.findById(channelId);
+    // Verify channel exists
+    await this.findById(channelId);
+
     const user = await this.userService.findById(userId);
     const members = await this.getMembers(channelId);
 

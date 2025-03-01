@@ -10,6 +10,7 @@ import { Workspace } from '../entities/workspace.entity';
 import { WorkspaceMember } from '../entities/workspace-member.entity';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceRole } from 'src/core/enums';
+import { IWorkspaceMember } from 'src/core/interfaces/entities/workspace.interface';
 
 @Injectable()
 export class WorkspaceService implements IWorkspaceService {
@@ -74,7 +75,9 @@ export class WorkspaceService implements IWorkspaceService {
     userId: string,
     role: WorkspaceRole = WorkspaceRole.MEMBER,
   ): Promise<WorkspaceMember> {
-    const workspace = await this.findById(workspaceId);
+    // Verify workspace exists
+    await this.findById(workspaceId);
+
     const existingMember = await this.workspaceRepository.findMember(
       workspaceId,
       userId,
@@ -84,12 +87,17 @@ export class WorkspaceService implements IWorkspaceService {
       throw new ConflictException('User is already a member of this workspace');
     }
 
-    return this.workspaceRepository.addMember(workspaceId, {
+    const memberData: Partial<IWorkspaceMember> = {
       userId,
       role,
       status: 'invited',
       joinedAt: new Date(),
-    });
+    };
+
+    return this.workspaceRepository.addMember(
+      workspaceId,
+      memberData,
+    ) as Promise<WorkspaceMember>;
   }
 
   async updateMember(
@@ -105,7 +113,9 @@ export class WorkspaceService implements IWorkspaceService {
       throw new NotFoundException('Member not found');
     }
 
-    return this.workspaceRepository.updateMember(workspaceId, userId, { role });
+    return this.workspaceRepository.updateMember(workspaceId, userId, {
+      role,
+    }) as Promise<WorkspaceMember>;
   }
 
   async removeMember(workspaceId: string, userId: string): Promise<void> {
@@ -129,7 +139,10 @@ export class WorkspaceService implements IWorkspaceService {
     workspaceId: string,
     userId: string,
   ): Promise<WorkspaceMember | null> {
-    return this.workspaceRepository.findMember(workspaceId, userId);
+    return this.workspaceRepository.findMember(
+      workspaceId,
+      userId,
+    ) as Promise<WorkspaceMember | null>;
   }
 
   async updateSettings(

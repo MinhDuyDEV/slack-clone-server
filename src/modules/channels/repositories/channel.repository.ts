@@ -7,7 +7,7 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { BaseRepository } from 'src/core/repositories/base.repository';
 
 @Injectable()
-export class ChannelRepository
+export class ChannelsRepository
   extends BaseRepository<Channel>
   implements IChannelRepository
 {

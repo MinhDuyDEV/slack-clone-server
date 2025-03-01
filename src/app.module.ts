@@ -13,6 +13,7 @@ import databaseConfig from './config/configurations/database.config';
 import { validationSchema } from './config/validation/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { ChannelsModule } from './modules/channels/channels.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     AuthModule,
     UsersModule,
     WorkspacesModule,
+    ChannelsModule,
   ],
   providers: [
     AppConfigService,

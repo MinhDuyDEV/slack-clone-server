@@ -20,7 +20,7 @@ import { WorkspaceRole } from 'src/core/enums';
 
 @Controller('workspaces/:workspaceId/channels')
 @UseGuards(JwtAuthGuard)
-export class ChannelController {
+export class ChannelsController {
   constructor(
     @Inject('IChannelService')
     private readonly channelService: IChannelService,

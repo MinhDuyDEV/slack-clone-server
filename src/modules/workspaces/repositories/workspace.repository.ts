@@ -7,7 +7,7 @@ import { WorkspaceMember } from '../entities/workspace-member.entity';
 import { BaseRepository } from 'src/core/repositories/base.repository';
 
 @Injectable()
-export class WorkspaceRepository
+export class WorkspacesRepository
   extends BaseRepository<Workspace>
   implements IWorkspaceRepository
 {

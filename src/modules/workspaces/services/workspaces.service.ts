@@ -13,7 +13,7 @@ import { WorkspaceRole } from 'src/core/enums';
 import { IWorkspaceMember } from 'src/core/interfaces/entities/workspace.interface';
 
 @Injectable()
-export class WorkspaceService implements IWorkspaceService {
+export class WorkspacesService implements IWorkspaceService {
   constructor(
     @Inject('IWorkspaceRepository')
     private readonly workspaceRepository: IWorkspaceRepository,

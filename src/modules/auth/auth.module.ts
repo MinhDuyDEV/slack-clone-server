@@ -16,7 +16,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RefreshTokenRepository } from './repositories/refresh-token.repositoty';
+import { RefreshTokensRepository } from './repositories/refresh-token.repository';
 
 @Module({
   imports: [
@@ -40,7 +40,7 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repositoty'
   providers: [
     {
       provide: 'IRefreshTokenRepository',
-      useClass: RefreshTokenRepository,
+      useClass: RefreshTokensRepository,
     },
     {
       provide: 'IAuthService',
@@ -49,6 +49,9 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repositoty'
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
+  ],
+  exports: [
+    // ... existing exports ...
   ],
 })
 export class AuthModule {}

@@ -20,7 +20,7 @@ import { WorkspaceRole } from 'src/core/enums';
 
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
-export class WorkspaceController {
+export class WorkspacesController {
   constructor(
     @Inject('IWorkspaceService')
     private readonly workspaceService: IWorkspaceService,

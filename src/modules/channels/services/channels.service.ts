@@ -12,7 +12,7 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { IUserService } from 'src/core/interfaces/services/user.service.interface';
 
 @Injectable()
-export class ChannelService implements IChannelService {
+export class ChannelsService implements IChannelService {
   constructor(
     @Inject('IChannelRepository')
     private readonly channelRepository: IChannelRepository,

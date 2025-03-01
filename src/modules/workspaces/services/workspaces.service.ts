@@ -11,6 +11,7 @@ import { WorkspaceMember } from '../entities/workspace-member.entity';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceRole } from 'src/core/enums';
 import { IWorkspaceMember } from 'src/core/interfaces/entities/workspace.interface';
+import { UpdateWorkspaceMemberProfileDto } from '../dto/update-workspace-member-profile.dto';
 
 @Injectable()
 export class WorkspacesService implements IWorkspaceService {
@@ -94,10 +95,11 @@ export class WorkspacesService implements IWorkspaceService {
       joinedAt: new Date(),
     };
 
-    return this.workspaceRepository.addMember(
+    const newMember = await this.workspaceRepository.addMember(
       workspaceId,
       memberData,
-    ) as Promise<WorkspaceMember>;
+    );
+    return newMember as unknown as WorkspaceMember;
   }
 
   async updateMember(
@@ -105,17 +107,51 @@ export class WorkspacesService implements IWorkspaceService {
     userId: string,
     role: WorkspaceRole,
   ): Promise<WorkspaceMember> {
+    const workspace = await this.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
     const member = await this.workspaceRepository.findMember(
       workspaceId,
       userId,
     );
     if (!member) {
-      throw new NotFoundException('Member not found');
+      throw new NotFoundException('Member not found in workspace');
     }
 
-    return this.workspaceRepository.updateMember(workspaceId, userId, {
-      role,
-    }) as Promise<WorkspaceMember>;
+    const updatedMember = await this.workspaceRepository.updateMember(
+      workspaceId,
+      userId,
+      { role },
+    );
+    return updatedMember as unknown as WorkspaceMember;
+  }
+
+  async updateMemberDisplayName(
+    workspaceId: string,
+    userId: string,
+    displayName: string,
+  ): Promise<WorkspaceMember> {
+    const workspace = await this.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await this.workspaceRepository.findMember(
+      workspaceId,
+      userId,
+    );
+    if (!member) {
+      throw new NotFoundException('Member not found in workspace');
+    }
+
+    const updatedMember = await this.workspaceRepository.updateMember(
+      workspaceId,
+      userId,
+      { displayName },
+    );
+    return updatedMember as unknown as WorkspaceMember;
   }
 
   async removeMember(workspaceId: string, userId: string): Promise<void> {
@@ -139,10 +175,11 @@ export class WorkspacesService implements IWorkspaceService {
     workspaceId: string,
     userId: string,
   ): Promise<WorkspaceMember | null> {
-    return this.workspaceRepository.findMember(
+    const member = await this.workspaceRepository.findMember(
       workspaceId,
       userId,
-    ) as Promise<WorkspaceMember | null>;
+    );
+    return member as unknown as WorkspaceMember | null;
   }
 
   async updateSettings(
@@ -158,5 +195,31 @@ export class WorkspacesService implements IWorkspaceService {
     return this.workspaceRepository.update(workspaceId, {
       settings: { ...workspace.settings, ...settings },
     });
+  }
+
+  async updateMemberProfile(
+    workspaceId: string,
+    userId: string,
+    profileData: UpdateWorkspaceMemberProfileDto,
+  ): Promise<WorkspaceMember> {
+    const workspace = await this.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await this.workspaceRepository.findMember(
+      workspaceId,
+      userId,
+    );
+    if (!member) {
+      throw new NotFoundException('Member not found in workspace');
+    }
+
+    const updatedMember = await this.workspaceRepository.updateMember(
+      workspaceId,
+      userId,
+      profileData,
+    );
+    return updatedMember as unknown as WorkspaceMember;
   }
 }

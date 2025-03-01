@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create.dto';
 import { UpdateUserDto } from './dto/update.dto';
 import { UserStatus } from 'src/core/enums';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService implements IUserService {
@@ -30,9 +31,8 @@ export class UsersService implements IUserService {
     return user;
   }
 
-  async findByEmailWithPassword(email: string): Promise<User> {
+  async findByEmailWithPassword(email: string): Promise<User | null> {
     const user = await this.userRepository.findByEmailWithPassword(email);
-    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
@@ -48,8 +48,12 @@ export class UsersService implements IUserService {
       throw new ConflictException('Email or username already exists');
     }
 
+    const { fullName, ...userData } = createUserDto;
+
     return this.userRepository.create({
-      ...createUserDto,
+      ...userData,
+      fullName,
+      displayName: fullName,
       email: createUserDto.email.toLowerCase(),
       username: createUserDto.username.toLowerCase(),
     });
@@ -72,6 +76,14 @@ export class UsersService implements IUserService {
     }
 
     return this.userRepository.update(id, updateUserDto);
+  }
+
+  async updateProfile(
+    id: string,
+    profileData: UpdateProfileDto,
+  ): Promise<User> {
+    await this.findById(id);
+    return this.userRepository.update(id, profileData);
   }
 
   async updateStatus(id: string, status: UserStatus): Promise<User> {

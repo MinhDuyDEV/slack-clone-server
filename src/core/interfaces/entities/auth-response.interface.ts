@@ -1,16 +1,7 @@
-import { UserStatus } from 'src/core/enums';
+import { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
 
 export interface IAuthResponse {
-  user: {
-    id: string;
-    email: string;
-    username: string;
-    displayName?: string;
-    avatar?: string;
-    status: UserStatus;
-    isEmailVerified: boolean;
-    createdAt: Date;
-  };
+  user: UserResponseDto;
   tokens: ITokens;
 }
 

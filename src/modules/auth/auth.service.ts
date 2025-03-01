@@ -21,6 +21,7 @@ import { IDeviceInfo } from 'src/core/interfaces/entities/device-info.interface'
 import { RegisterDto } from './dto/register.dto';
 import { UserStatus } from 'src/core/enums';
 import { ITokenPayload } from 'src/core/interfaces/entities/token-payload.interface';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import {
   access_token_private_key,
   refresh_token_private_key,
@@ -51,7 +52,7 @@ export class AuthService implements IAuthService {
       return user;
     } catch (error) {
       this.logger.error(`Error validating user: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error validating user');
+      return null;
     }
   }
 
@@ -73,7 +74,10 @@ export class AuthService implements IAuthService {
         isOnline: true,
       });
 
-      return { user, tokens };
+      return {
+        user: UserResponseDto.fromEntity(user),
+        tokens,
+      };
     } catch (error) {
       this.logger.error(`Error during login: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Error during login');
@@ -90,7 +94,26 @@ export class AuthService implements IAuthService {
         status: UserStatus.PENDING,
       });
 
-      return this.login(user, deviceInfo);
+      const tokens = await this.generateTokens(user);
+
+      await this.refreshTokenRepository.create({
+        userId: user.id,
+        token: tokens.refreshToken,
+        deviceInfo: {
+          ip: deviceInfo?.ip,
+          userAgent: deviceInfo?.userAgent,
+        },
+      });
+
+      await this.userService.update(user.id, {
+        lastLoginAt: new Date(),
+        isOnline: true,
+      });
+
+      return {
+        user: UserResponseDto.fromEntity(user),
+        tokens,
+      };
     } catch (error) {
       if (error instanceof ConflictException) throw error;
 

@@ -24,7 +24,11 @@ export interface IWorkspace extends IBaseEntity {
 export interface IWorkspaceMember extends IBaseEntity {
   workspaceId: string;
   userId: string;
+  displayName?: string;
+  title?: string;
   role: WorkspaceRole;
+  isFavorite: boolean;
+  notifications: boolean;
   status: 'active' | 'inactive' | 'invited';
   joinedAt: Date;
   invitedBy?: string;

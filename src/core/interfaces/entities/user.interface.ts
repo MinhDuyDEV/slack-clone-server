@@ -3,13 +3,14 @@ import { UserStatus } from '../../enums';
 import { IBaseEntity } from './base.interface';
 import { IChannel } from './channel.interface';
 import { IDirectMessage } from './direct-message.interface';
-import { IWorkspace } from './workspace.interface';
+import { IWorkspaceMember } from './workspace.interface';
 
 export interface IUser extends IBaseEntity {
   email: string;
   username: string;
   password?: string;
   refreshTokens: RefreshToken[];
+  fullName?: string;
   displayName?: string;
 
   avatar?: string;
@@ -22,7 +23,7 @@ export interface IUser extends IBaseEntity {
   isOnline: boolean;
   lastSeen?: Date;
 
-  workspaces?: IWorkspace[];
+  workspaces?: IWorkspaceMember[];
   channels?: IChannel[];
   directMessages?: IDirectMessage[];
 

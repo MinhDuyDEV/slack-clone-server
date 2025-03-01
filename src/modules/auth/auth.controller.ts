@@ -27,6 +27,7 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { IDeviceInfo } from 'src/core/interfaces/entities/device-info.interface';
 import { IAuthService } from 'src/core/interfaces/services/auth.service.interface';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -37,11 +38,16 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @HttpCode(HttpStatus.OK)
   async register(
     @Body() registerDto: RegisterDto,
     @Req() req: Request & { deviceInfo?: IDeviceInfo },
   ): Promise<IAuthResponse> {
-    return this.authService.register(registerDto, req.deviceInfo);
+    const deviceInfo = {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    };
+    return this.authService.register(registerDto, deviceInfo);
   }
 
   @Public()
@@ -82,14 +88,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@CurrentUser() user: User): Promise<User> {
-    return user;
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('verify-token')
-  @HttpCode(HttpStatus.OK)
-  verifyToken(@CurrentUser() user: User): { userId: string } {
-    return { userId: user.id };
+  async getProfile(@CurrentUser() user: User): Promise<UserResponseDto> {
+    return UserResponseDto.fromEntity(user);
   }
 }

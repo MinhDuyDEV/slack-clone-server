@@ -15,6 +15,7 @@ import { Entity } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from 'src/core/enums';
 import { RefreshToken } from 'src/modules/auth/entities/refresh-token.entity';
+import { WorkspaceMember } from 'src/modules/workspaces/entities/workspace-member.entity';
 
 @Entity('users')
 export class User implements IUser {
@@ -28,6 +29,9 @@ export class User implements IUser {
   @Column({ unique: true })
   @Index()
   username: string;
+
+  @Column({ nullable: true })
+  fullName?: string;
 
   @Column({ nullable: true })
   displayName?: string;
@@ -96,6 +100,9 @@ export class User implements IUser {
 
   @OneToMany(() => RefreshToken, (token) => token.user)
   refreshTokens: RefreshToken[];
+
+  @OneToMany(() => WorkspaceMember, (member) => member.user)
+  workspaces: WorkspaceMember[];
 
   @Column({ nullable: true })
   lastLoginAt?: Date;

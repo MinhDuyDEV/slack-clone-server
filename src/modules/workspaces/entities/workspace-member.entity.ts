@@ -24,12 +24,32 @@ export class WorkspaceMember implements IWorkspaceMember {
   @Column()
   userId: string;
 
+  @ManyToOne(() => User, (user) => user.workspaces)
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @ManyToOne(() => Workspace, (workspace) => workspace.members)
+  @JoinColumn({ name: 'workspaceId' })
+  workspace: Workspace;
+
+  @Column({ nullable: true })
+  displayName?: string;
+
+  @Column({ nullable: true })
+  title?: string;
+
   @Column({
     type: 'enum',
     enum: WorkspaceRole,
     default: WorkspaceRole.MEMBER,
   })
   role: WorkspaceRole;
+
+  @Column({ default: false })
+  isFavorite: boolean;
+
+  @Column({ default: true })
+  notifications: boolean;
 
   @Column({
     type: 'enum',
@@ -43,14 +63,6 @@ export class WorkspaceMember implements IWorkspaceMember {
 
   @Column({ nullable: true })
   invitedBy?: string;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
-  user: User;
-
-  @ManyToOne(() => Workspace, (workspace) => workspace.members)
-  @JoinColumn({ name: 'workspaceId' })
-  workspace: Workspace;
 
   @CreateDateColumn()
   createdAt: Date;

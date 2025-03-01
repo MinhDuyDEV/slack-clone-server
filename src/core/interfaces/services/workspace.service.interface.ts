@@ -2,6 +2,7 @@ import { Workspace } from 'src/modules/workspaces/entities/workspace.entity';
 import { CreateWorkspaceDto } from 'src/modules/workspaces/dto/create-workspace.dto';
 import { WorkspaceMember } from 'src/modules/workspaces/entities/workspace-member.entity';
 import { WorkspaceRole } from 'src/core/enums';
+import { UpdateWorkspaceMemberProfileDto } from 'src/modules/workspaces/dto/update-workspace-member-profile.dto';
 
 export interface IWorkspaceService {
   create(
@@ -22,6 +23,16 @@ export interface IWorkspaceService {
     workspaceId: string,
     userId: string,
     role: WorkspaceRole,
+  ): Promise<WorkspaceMember>;
+  updateMemberDisplayName(
+    workspaceId: string,
+    userId: string,
+    displayName: string,
+  ): Promise<WorkspaceMember>;
+  updateMemberProfile(
+    workspaceId: string,
+    userId: string,
+    profileData: UpdateWorkspaceMemberProfileDto,
   ): Promise<WorkspaceMember>;
   removeMember(workspaceId: string, userId: string): Promise<void>;
   getMember(

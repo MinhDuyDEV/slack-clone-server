@@ -17,6 +17,7 @@ import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { User } from 'src/modules/users/entities/user.entity';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceRole } from 'src/core/enums';
+import { UpdateWorkspaceMemberProfileDto } from '../dto/update-workspace-member-profile.dto';
 
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
@@ -96,5 +97,33 @@ export class WorkspacesController {
     },
   ) {
     return this.workspaceService.updateSettings(workspaceId, settings);
+  }
+
+  @Put(':id/members/profile')
+  async updateMemberProfile(
+    @Param('id') workspaceId: string,
+    @CurrentUser() user: User,
+    @Body() updateProfileDto: UpdateWorkspaceMemberProfileDto,
+  ) {
+    return this.workspaceService.updateMemberProfile(
+      workspaceId,
+      user.id,
+      updateProfileDto,
+    );
+  }
+
+  @Put(':id/members/:userId/profile')
+  @UseGuards(WorkspaceRoleGuard)
+  @WorkspaceRoles(WorkspaceRole.ADMIN, WorkspaceRole.OWNER)
+  async updateOtherMemberProfile(
+    @Param('id') workspaceId: string,
+    @Param('userId') userId: string,
+    @Body() updateProfileDto: UpdateWorkspaceMemberProfileDto,
+  ) {
+    return this.workspaceService.updateMemberProfile(
+      workspaceId,
+      userId,
+      updateProfileDto,
+    );
   }
 }

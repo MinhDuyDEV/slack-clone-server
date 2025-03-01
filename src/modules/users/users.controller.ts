@@ -13,6 +13,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { IUserService } from '../../core/interfaces/services/user.service.interface';
 import { CreateUserDto } from './dto/create.dto';
 import { UpdateUserDto } from './dto/update.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { CurrentUser } from 'src/common/decorators/user.decorator';
+import { User } from './entities/user.entity';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -35,6 +38,14 @@ export class UsersController {
   @Put(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
+  }
+
+  @Put('profile')
+  updateProfile(
+    @CurrentUser() user: User,
+    @Body() profileData: UpdateProfileDto,
+  ) {
+    return this.userService.updateProfile(user.id, profileData);
   }
 
   @Delete(':id')

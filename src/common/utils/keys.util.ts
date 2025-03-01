@@ -2,20 +2,27 @@ import * as fs from 'fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 
-function checkExistFolder(name: string) {
-  const check_path = path.join(__dirname, `../../${name}`);
-  !fs.existsSync(check_path) && fs.mkdirSync(check_path, { recursive: true });
+function getKeysDirectory() {
+  // Sử dụng biến môi trường JWT_KEYS_DIRECTORY nếu có, nếu không thì sử dụng thư mục keys trong thư mục gốc của server
+  const keysDirectory =
+    process.env.JWT_KEYS_DIRECTORY || path.join(process.cwd(), 'keys');
+
+  // Đảm bảo thư mục tồn tại
+  !fs.existsSync(keysDirectory) &&
+    fs.mkdirSync(keysDirectory, { recursive: true });
+
+  return keysDirectory;
 }
 
 function getAccessTokenKeyPair() {
-  checkExistFolder('secure');
+  const keysDirectory = getKeysDirectory();
   const access_token_private_key_path = path.join(
-    __dirname,
-    '../../secure/access_token_private.key',
+    keysDirectory,
+    'access_token_private.key',
   );
   const access_token_public_key_path = path.join(
-    __dirname,
-    '../../secure/access_token_public.key',
+    keysDirectory,
+    'access_token_public.key',
   );
 
   const access_token_private_key_exists = fs.existsSync(
@@ -55,14 +62,14 @@ function getAccessTokenKeyPair() {
 }
 
 function getRefreshTokenKeyPair() {
-  checkExistFolder('secure');
+  const keysDirectory = getKeysDirectory();
   const refresh_token_private_key_path = path.join(
-    __dirname,
-    '../../secure/refresh_token_private.key',
+    keysDirectory,
+    'refresh_token_private.key',
   );
   const refresh_token_public_key_path = path.join(
-    __dirname,
-    '../../secure/refresh_token_public.key',
+    keysDirectory,
+    'refresh_token_public.key',
   );
 
   const refresh_token_private_key_exists = fs.existsSync(

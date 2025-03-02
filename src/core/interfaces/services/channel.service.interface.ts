@@ -21,3 +21,4 @@ export interface IChannelService {
 
   delete(channelId: string): Promise<void>;
 }
+

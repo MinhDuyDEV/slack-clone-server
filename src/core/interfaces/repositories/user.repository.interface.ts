@@ -8,4 +8,5 @@ export interface IUserRepository extends IBaseRepository<User> {
   }): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findByEmailWithPassword(email: string): Promise<User | null>;
+  findByIdWithPassword(id: string): Promise<User | null>;
 }

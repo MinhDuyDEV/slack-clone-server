@@ -1,16 +1,18 @@
 import { WorkspaceRole } from 'src/core/enums';
 import { IBaseEntity } from './base.interface';
 import { IChannel } from './channel.interface';
+import { ISection } from './section.interface';
 import { IUser } from './user.interface';
 
 export interface IWorkspace extends IBaseEntity {
   name: string;
-  slug: string;
+  slug?: string;
   description?: string;
   logo?: string;
 
   ownerId: string;
   members?: IWorkspaceMember[];
+  sections?: ISection[];
   channels?: IChannel[];
 
   settings?: {
@@ -18,6 +20,7 @@ export interface IWorkspace extends IBaseEntity {
     allowPublicChannels: boolean;
     allowDirectMessages: boolean;
     defaultChannelId?: string;
+    defaultSectionId?: string;
   };
 }
 

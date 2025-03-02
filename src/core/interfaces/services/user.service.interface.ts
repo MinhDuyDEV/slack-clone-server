@@ -13,4 +13,9 @@ export interface IUserService {
   updateProfile(id: string, profileData: UpdateProfileDto): Promise<User>;
   updateStatus(id: string, status: UserStatus): Promise<User>;
   updateLastSeen(id: string): Promise<void>;
+  updatePassword(
+    id: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<User>;
 }

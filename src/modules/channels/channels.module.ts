@@ -23,3 +23,4 @@ import { WorkspacesModule } from '../workspaces/workspaces.module';
   exports: ['IChannelService', 'IChannelRepository'],
 })
 export class ChannelsModule {}
+

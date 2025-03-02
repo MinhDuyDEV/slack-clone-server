@@ -3,6 +3,8 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { IWorkspaceService } from 'src/core/interfaces/services/workspace.service.interface';
 import { IWorkspaceRepository } from 'src/core/interfaces/repositories/workspace.repository.interface';
@@ -12,18 +14,28 @@ import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceRole } from 'src/core/enums';
 import { IWorkspaceMember } from 'src/core/interfaces/entities/workspace.interface';
 import { UpdateWorkspaceMemberProfileDto } from '../dto/update-workspace-member-profile.dto';
+import { CreateInviteDto } from '../dto/create-invite.dto';
+import { WorkspaceInvite } from '../entities/workspace-invite.entity';
+import { WorkspaceInviteRepository } from '../repositories/workspace-invite.repository';
+import { randomBytes } from 'crypto';
+import { add } from 'date-fns';
 
 @Injectable()
 export class WorkspacesService implements IWorkspaceService {
   constructor(
     @Inject('IWorkspaceRepository')
     private readonly workspaceRepository: IWorkspaceRepository,
+    private readonly inviteRepository: WorkspaceInviteRepository,
   ) {}
 
   async create(
     userId: string,
     createWorkspaceDto: CreateWorkspaceDto,
   ): Promise<Workspace> {
+    if (!createWorkspaceDto.slug) {
+      createWorkspaceDto.slug = this.generateSlug(createWorkspaceDto.name);
+    }
+
     const existingWorkspace = await this.workspaceRepository.findBySlug(
       createWorkspaceDto.slug,
     );
@@ -45,10 +57,18 @@ export class WorkspacesService implements IWorkspaceService {
       userId,
       role: WorkspaceRole.OWNER,
       status: 'active',
+      invitedBy: userId,
       joinedAt: new Date(),
     });
 
     return workspace;
+  }
+
+  private generateSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
   async findById(id: string): Promise<Workspace> {
@@ -76,7 +96,6 @@ export class WorkspacesService implements IWorkspaceService {
     userId: string,
     role: WorkspaceRole = WorkspaceRole.MEMBER,
   ): Promise<WorkspaceMember> {
-    // Verify workspace exists
     await this.findById(workspaceId);
 
     const existingMember = await this.workspaceRepository.findMember(
@@ -91,6 +110,7 @@ export class WorkspacesService implements IWorkspaceService {
     const memberData: Partial<IWorkspaceMember> = {
       userId,
       role,
+      invitedBy: userId,
       status: 'invited',
       joinedAt: new Date(),
     };
@@ -99,7 +119,7 @@ export class WorkspacesService implements IWorkspaceService {
       workspaceId,
       memberData,
     );
-    return newMember as unknown as WorkspaceMember;
+    return newMember as WorkspaceMember;
   }
 
   async updateMember(
@@ -220,6 +240,142 @@ export class WorkspacesService implements IWorkspaceService {
       userId,
       profileData,
     );
-    return updatedMember as unknown as WorkspaceMember;
+    return updatedMember as WorkspaceMember;
+  }
+
+  async isUserMemberOfWorkspace(
+    workspaceId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const member = await this.workspaceRepository.findMember(
+      workspaceId,
+      userId,
+    );
+    return !!member;
+  }
+
+  async createInvite(
+    workspaceId: string,
+    userId: string,
+    createInviteDto: CreateInviteDto,
+  ): Promise<WorkspaceInvite> {
+    const workspace = await this.findById(workspaceId);
+
+    const member = await this.workspaceRepository.findMember(
+      workspaceId,
+      userId,
+    );
+    if (!member) {
+      throw new UnauthorizedException('You are not a member of this workspace');
+    }
+
+    if (
+      member.role !== WorkspaceRole.OWNER &&
+      member.role !== WorkspaceRole.ADMIN
+    ) {
+      throw new UnauthorizedException(
+        'You do not have permission to create invites',
+      );
+    }
+
+    if (!workspace.settings?.allowInvites) {
+      throw new BadRequestException('Invites are disabled for this workspace');
+    }
+
+    const code = this.generateInviteCode();
+
+    let expiresAt: Date;
+    if (createInviteDto.expiresIn) {
+      const duration = createInviteDto.expiresIn;
+      if (duration.endsWith('d')) {
+        const days = parseInt(duration.slice(0, -1));
+        expiresAt = add(new Date(), { days });
+      } else if (duration.endsWith('h')) {
+        const hours = parseInt(duration.slice(0, -1));
+        expiresAt = add(new Date(), { hours });
+      } else {
+        expiresAt = add(new Date(), { days: 7 });
+      }
+    } else {
+      expiresAt = add(new Date(), { days: 7 });
+    }
+
+    const inviteData = {
+      code,
+      workspaceId,
+      createdBy: userId,
+      role: createInviteDto.role || WorkspaceRole.MEMBER,
+      multiUse: createInviteDto.multiUse || false,
+      expiresAt,
+    };
+
+    return this.inviteRepository.create(inviteData);
+  }
+
+  async joinWorkspaceByCode(
+    userId: string,
+    inviteCode: string,
+  ): Promise<WorkspaceMember> {
+    const invite = await this.inviteRepository.findActiveByCode(inviteCode);
+    if (!invite) {
+      throw new NotFoundException('Invalid or expired invite code');
+    }
+
+    if (invite.expiresAt < new Date()) {
+      throw new BadRequestException('Invite code has expired');
+    }
+
+    const existingMember = await this.workspaceRepository.findMember(
+      invite.workspaceId,
+      userId,
+    );
+    if (existingMember) {
+      throw new ConflictException('You are already a member of this workspace');
+    }
+
+    const memberData: Partial<IWorkspaceMember> = {
+      userId,
+      role: invite.role,
+      status: 'active',
+      joinedAt: new Date(),
+      invitedBy: invite.createdBy,
+    };
+
+    const member = await this.workspaceRepository.addMember(
+      invite.workspaceId,
+      memberData,
+    );
+
+    if (!invite.multiUse) {
+      await this.inviteRepository.softDelete(invite.id);
+    } else {
+      await this.inviteRepository.incrementUsageCount(invite.id);
+    }
+
+    return member as WorkspaceMember;
+  }
+
+  async getWorkspaceInvites(workspaceId: string): Promise<WorkspaceInvite[]> {
+    await this.findById(workspaceId);
+
+    return this.inviteRepository.find({
+      where: { workspaceId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async deleteInvite(workspaceId: string, inviteId: string): Promise<void> {
+    await this.findById(workspaceId);
+
+    const invite = await this.inviteRepository.findById(inviteId);
+    if (!invite || invite.workspaceId !== workspaceId) {
+      throw new NotFoundException('Invite not found');
+    }
+
+    await this.inviteRepository.softDelete(inviteId);
+  }
+
+  private generateInviteCode(): string {
+    return randomBytes(5).toString('hex');
   }
 }

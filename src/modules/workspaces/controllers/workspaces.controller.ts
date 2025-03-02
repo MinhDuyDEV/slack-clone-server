@@ -18,6 +18,8 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceRole } from 'src/core/enums';
 import { UpdateWorkspaceMemberProfileDto } from '../dto/update-workspace-member-profile.dto';
+import { CreateInviteDto } from '../dto/create-invite.dto';
+import { JoinWorkspaceDto } from '../dto/join-workspace.dto';
 
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
@@ -124,6 +126,50 @@ export class WorkspacesController {
       workspaceId,
       userId,
       updateProfileDto,
+    );
+  }
+
+  @Post(':workspaceId/invites')
+  @UseGuards(WorkspaceRoleGuard)
+  @WorkspaceRoles(WorkspaceRole.ADMIN, WorkspaceRole.OWNER)
+  async createInvite(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+    @Body() createInviteDto: CreateInviteDto,
+  ) {
+    return this.workspaceService.createInvite(
+      workspaceId,
+      user.id,
+      createInviteDto,
+    );
+  }
+
+  @Get(':workspaceId/invites')
+  @UseGuards(WorkspaceRoleGuard)
+  @WorkspaceRoles(WorkspaceRole.ADMIN, WorkspaceRole.OWNER)
+  async getWorkspaceInvites(@Param('workspaceId') workspaceId: string) {
+    return this.workspaceService.getWorkspaceInvites(workspaceId);
+  }
+
+  @Delete(':workspaceId/invites/:inviteId')
+  @UseGuards(WorkspaceRoleGuard)
+  @WorkspaceRoles(WorkspaceRole.ADMIN, WorkspaceRole.OWNER)
+  async deleteInvite(
+    @Param('workspaceId') workspaceId: string,
+    @Param('inviteId') inviteId: string,
+  ) {
+    await this.workspaceService.deleteInvite(workspaceId, inviteId);
+    return { message: 'Invite deleted successfully' };
+  }
+
+  @Post('join')
+  async joinWorkspace(
+    @CurrentUser() user: User,
+    @Body() joinWorkspaceDto: JoinWorkspaceDto,
+  ) {
+    return this.workspaceService.joinWorkspaceByCode(
+      user.id,
+      joinWorkspaceDto.inviteCode,
     );
   }
 }

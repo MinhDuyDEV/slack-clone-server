@@ -3,6 +3,7 @@ import { IMessage } from './message.interface';
 import { ChannelType } from 'src/core/enums';
 import { IUser } from './user.interface';
 import { IWorkspace } from './workspace.interface';
+import { ISection } from './section.interface';
 
 export interface IChannel {
   id: string;
@@ -11,6 +12,8 @@ export interface IChannel {
   type: ChannelType;
   workspaceId: string;
   workspace: IWorkspace;
+  sectionId: string;
+  section: ISection;
   createdBy: string;
   creator: IUser;
   isPrivate: boolean;

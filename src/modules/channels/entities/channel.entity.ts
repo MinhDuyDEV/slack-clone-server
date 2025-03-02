@@ -14,6 +14,7 @@ import { IChannel } from 'src/core/interfaces/entities/channel.interface';
 import { ChannelType } from 'src/core/enums';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/entities/workspace.entity';
+import { Section } from 'src/modules/sections/entities/section.entity';
 
 @Entity('channels')
 export class Channel implements IChannel {
@@ -39,6 +40,13 @@ export class Channel implements IChannel {
   @ManyToOne(() => Workspace, (workspace) => workspace.channels)
   @JoinColumn({ name: 'workspaceId' })
   workspace: Workspace;
+
+  @Column()
+  sectionId: string;
+
+  @ManyToOne(() => Section, (section) => section.channels)
+  @JoinColumn({ name: 'sectionId' })
+  section: Section;
 
   @Column()
   createdBy: string;

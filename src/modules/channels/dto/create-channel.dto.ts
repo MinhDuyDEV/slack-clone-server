@@ -27,3 +27,4 @@ export class CreateChannelDto {
   @IsOptional()
   isPrivate?: boolean;
 }
+

@@ -14,6 +14,7 @@ import { validationSchema } from './config/validation/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { ChannelsModule } from './modules/channels/channels.module';
+import { SectionsModule } from './modules/sections/sections.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ChannelsModule } from './modules/channels/channels.module';
     UsersModule,
     WorkspacesModule,
     ChannelsModule,
+    SectionsModule,
   ],
   providers: [
     AppConfigService,

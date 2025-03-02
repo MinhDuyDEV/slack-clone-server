@@ -13,6 +13,7 @@ import { IWorkspace } from 'src/core/interfaces/entities/workspace.interface';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Channel } from 'src/modules/channels/entities/channel.entity';
 import { WorkspaceMember } from './workspace-member.entity';
+import { Section } from 'src/modules/sections/entities/section.entity';
 
 @Entity('workspaces')
 export class Workspace implements IWorkspace {
@@ -23,7 +24,7 @@ export class Workspace implements IWorkspace {
   name: string;
 
   @Column({ unique: true })
-  slug: string;
+  slug?: string;
 
   @Column({ nullable: true })
   description?: string;
@@ -41,6 +42,9 @@ export class Workspace implements IWorkspace {
   @OneToMany(() => WorkspaceMember, (member) => member.workspace)
   members: WorkspaceMember[];
 
+  @OneToMany(() => Section, (section) => section.workspace)
+  sections: Section[];
+
   @OneToMany(() => Channel, (channel) => channel.workspace)
   channels: Channel[];
 
@@ -50,6 +54,7 @@ export class Workspace implements IWorkspace {
     allowPublicChannels: boolean;
     allowDirectMessages: boolean;
     defaultChannelId?: string;
+    defaultSectionId?: string;
   };
 
   @CreateDateColumn()

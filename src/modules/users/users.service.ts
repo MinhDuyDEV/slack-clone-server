@@ -3,6 +3,7 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { IUserRepository } from 'src/core/interfaces/repositories/user.repository.interface';
 import { IUserService } from 'src/core/interfaces/services/user.service.interface';
@@ -11,6 +12,7 @@ import { CreateUserDto } from './dto/create.dto';
 import { UpdateUserDto } from './dto/update.dto';
 import { UserStatus } from 'src/core/enums';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService implements IUserService {
@@ -92,9 +94,36 @@ export class UsersService implements IUserService {
   }
 
   async updateLastSeen(id: string): Promise<void> {
-    await this.userRepository.update(id, {
-      lastSeen: new Date(),
-      isOnline: false,
-    });
+    await this.userRepository.update(id, { lastSeen: new Date() });
+  }
+
+  async updatePassword(
+    id: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<User> {
+    const user = await this.userRepository.findByIdWithPassword(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await this.userRepository.update(id, { password: hashedPassword });
+
+    // Return user without password
+    return this.findById(id);
   }
 }

@@ -8,6 +8,7 @@ export class CreateWorkspaceDto {
   name: string;
 
   @IsString()
+  @IsOptional()
   @MinLength(3)
   @MaxLength(50)
   @Transform(({ value }) => value.toLowerCase().replace(/\s+/g, '-'))

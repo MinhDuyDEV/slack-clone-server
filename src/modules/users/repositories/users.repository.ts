@@ -36,4 +36,11 @@ export class UsersRepository
       select: ['id', 'email', 'password', 'status'],
     });
   }
+
+  async findByIdWithPassword(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { id },
+      select: ['id', 'email', 'password', 'status'],
+    });
+  }
 }

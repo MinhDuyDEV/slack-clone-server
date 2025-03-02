@@ -3,6 +3,8 @@ import { CreateWorkspaceDto } from 'src/modules/workspaces/dto/create-workspace.
 import { WorkspaceMember } from 'src/modules/workspaces/entities/workspace-member.entity';
 import { WorkspaceRole } from 'src/core/enums';
 import { UpdateWorkspaceMemberProfileDto } from 'src/modules/workspaces/dto/update-workspace-member-profile.dto';
+import { CreateInviteDto } from 'src/modules/workspaces/dto/create-invite.dto';
+import { WorkspaceInvite } from 'src/modules/workspaces/entities/workspace-invite.entity';
 
 export interface IWorkspaceService {
   create(
@@ -50,4 +52,23 @@ export interface IWorkspaceService {
       defaultChannelId?: string;
     },
   ): Promise<Workspace>;
+
+  // Check membership
+  isUserMemberOfWorkspace(
+    workspaceId: string,
+    userId: string,
+  ): Promise<boolean>;
+
+  // Invites
+  createInvite(
+    workspaceId: string,
+    userId: string,
+    createInviteDto: CreateInviteDto,
+  ): Promise<WorkspaceInvite>;
+  getWorkspaceInvites(workspaceId: string): Promise<WorkspaceInvite[]>;
+  deleteInvite(workspaceId: string, inviteId: string): Promise<void>;
+  joinWorkspaceByCode(
+    userId: string,
+    inviteCode: string,
+  ): Promise<WorkspaceMember>;
 }

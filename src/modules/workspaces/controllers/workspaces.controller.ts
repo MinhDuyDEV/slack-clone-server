@@ -20,6 +20,7 @@ import { WorkspaceRole } from 'src/core/enums';
 import { UpdateWorkspaceMemberProfileDto } from '../dto/update-workspace-member-profile.dto';
 import { CreateInviteDto } from '../dto/create-invite.dto';
 import { JoinWorkspaceDto } from '../dto/join-workspace.dto';
+import { Workspace } from '../entities/workspace.entity';
 
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
@@ -29,27 +30,98 @@ export class WorkspacesController {
     private readonly workspaceService: IWorkspaceService,
   ) {}
 
+  private formatWorkspaceResponse(
+    workspace: Workspace,
+    currentUserId?: string,
+  ) {
+    const channelsBySection = new Map<string, any[]>();
+
+    if (workspace.channels && workspace.channels.length > 0) {
+      for (const channel of workspace.channels) {
+        if (!channelsBySection.has(channel.sectionId)) {
+          channelsBySection.set(channel.sectionId, []);
+        }
+        channelsBySection.get(channel.sectionId).push({
+          id: channel.id,
+          name: channel.name,
+          description: channel.description,
+          type: channel.type,
+          isPrivate: channel.isPrivate,
+          isDefault: channel.isDefault,
+          sectionId: channel.sectionId,
+        });
+      }
+    }
+
+    const response = {
+      id: workspace.id,
+      name: workspace.name,
+      slug: workspace.slug,
+      description: workspace.description,
+      logo: workspace.logo,
+      ownerId: workspace.ownerId,
+      settings: workspace.settings,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt,
+      sections: [],
+    };
+
+    if (workspace.sections && workspace.sections.length > 0) {
+      const filteredSections = currentUserId
+        ? workspace.sections.filter(
+            (section) =>
+              !section.isDirectMessages ||
+              (section.isDirectMessages && section.userId === currentUserId),
+          )
+        : workspace.sections;
+
+      response.sections = filteredSections.map((section) => ({
+        id: section.id,
+        name: section.name,
+        isDefault: section.isDefault,
+        isDirectMessages: section.isDirectMessages,
+        order: section.order,
+        userId: section.userId,
+        channels: channelsBySection.get(section.id) || [],
+      }));
+    }
+
+    return response;
+  }
+
   @Post()
   async create(
     @CurrentUser() user: User,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ) {
-    return this.workspaceService.create(user.id, createWorkspaceDto);
+    const workspace = await this.workspaceService.create(
+      user.id,
+      createWorkspaceDto,
+    );
+
+    return this.formatWorkspaceResponse(workspace, user.id);
   }
 
   @Get('my')
   async getMyWorkspaces(@CurrentUser() user: User) {
-    return this.workspaceService.findUserWorkspaces(user.id);
+    const workspaces = await this.workspaceService.findUserWorkspaces(user.id);
+    return Promise.all(
+      workspaces.map((workspace) =>
+        this.formatWorkspaceResponse(workspace, user.id),
+      ),
+    );
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string) {
-    return this.workspaceService.findById(id);
+  async findById(@Param('id') id: string, @CurrentUser() user: User) {
+    const workspace = await this.workspaceService.findById(id, user.id);
+    return this.formatWorkspaceResponse(workspace, user.id);
   }
 
   @Get('slug/:slug')
-  async findBySlug(@Param('slug') slug: string) {
-    return this.workspaceService.findBySlug(slug);
+  async findBySlug(@Param('slug') slug: string, @CurrentUser() user: User) {
+    const workspace = await this.workspaceService.findBySlug(slug, user.id);
+    return this.formatWorkspaceResponse(workspace, user.id);
   }
 
   @Post(':workspaceId/members')

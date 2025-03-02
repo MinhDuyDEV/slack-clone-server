@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { Workspace } from './entities/workspace.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkspaceMember } from './entities/workspace-member.entity';
@@ -9,10 +9,14 @@ import { WorkspacesController } from './controllers/workspaces.controller';
 import { WorkspaceAccessGuard } from './guards/workspace-access.guard';
 import { WorkspaceInvite } from './entities/workspace-invite.entity';
 import { WorkspaceInviteRepository } from './repositories/workspace-invite.repository';
+import { SectionsModule } from '../sections/sections.module';
+import { ChannelsModule } from '../channels/channels.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Workspace, WorkspaceMember, WorkspaceInvite]),
+    forwardRef(() => SectionsModule),
+    forwardRef(() => ChannelsModule),
   ],
   controllers: [WorkspacesController],
   providers: [

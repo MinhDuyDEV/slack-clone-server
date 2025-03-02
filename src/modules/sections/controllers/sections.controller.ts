@@ -30,7 +30,6 @@ export class SectionsController {
     @Body() createSectionDto: CreateSectionDto,
     @Request() req,
   ) {
-    // Đảm bảo workspaceId từ URL được sử dụng
     createSectionDto.workspaceId = workspaceId;
     return this.sectionsService.create(createSectionDto, req.user.id);
   }

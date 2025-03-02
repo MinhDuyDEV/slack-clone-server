@@ -50,8 +50,6 @@ import { RefreshTokensRepository } from './repositories/refresh-token.repository
     JwtStrategy,
     JwtRefreshStrategy,
   ],
-  exports: [
-    // ... existing exports ...
-  ],
+  exports: [],
 })
 export class AuthModule {}

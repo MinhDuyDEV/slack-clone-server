@@ -58,6 +58,9 @@ export class Channel implements IChannel {
   @Column({ default: false })
   isPrivate: boolean;
 
+  @Column({ default: false })
+  isDefault: boolean;
+
   @ManyToMany(() => User)
   @JoinTable({
     name: 'channel_members',

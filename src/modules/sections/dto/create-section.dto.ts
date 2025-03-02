@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateSectionDto {
@@ -16,12 +17,24 @@ export class CreateSectionDto {
   description?: string;
 
   @IsUUID()
-  @IsNotEmpty()
+  @IsOptional()
   workspaceId: string;
 
   @IsBoolean()
   @IsOptional()
   isDefault?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isDirectMessages?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  order?: number;
+
+  @IsUUID()
+  @IsOptional()
+  userId?: string;
 
   @IsOptional()
   settings?: {

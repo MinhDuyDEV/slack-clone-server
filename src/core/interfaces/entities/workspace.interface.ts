@@ -21,6 +21,8 @@ export interface IWorkspace extends IBaseEntity {
     allowDirectMessages: boolean;
     defaultChannelId?: string;
     defaultSectionId?: string;
+    directMessagesSectionId?: string;
+    ownerDirectMessageSectionId?: string;
   };
 }
 

@@ -1,6 +1,7 @@
 import { IBaseEntity } from './base.interface';
 import { IChannel } from './channel.interface';
 import { IWorkspace } from './workspace.interface';
+import { IUser } from './user.interface';
 
 export interface ISection extends IBaseEntity {
   name: string;
@@ -10,10 +11,14 @@ export interface ISection extends IBaseEntity {
   channels?: IChannel[];
   order?: number;
   isDefault?: boolean;
+  isDirectMessages?: boolean;
   createdBy: string;
+  creator?: IUser;
+  userId?: string;
+  user?: IUser;
   settings?: {
-    isCollapsed: boolean;
-    isPrivate: boolean;
+    isCollapsed?: boolean;
+    isPrivate?: boolean;
     allowedRoles?: string[];
   };
 }

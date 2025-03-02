@@ -41,16 +41,14 @@ export class AuthController {
     res: Response,
     tokens: { accessToken: string; refreshToken: string; expiresIn: number },
   ) {
-    // Set access token in HTTP-only cookie
     res.cookie('access_token', tokens.accessToken, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'strict',
-      maxAge: tokens.expiresIn * 1000, // Convert seconds to milliseconds
-      path: '/', // Available on all paths
+      maxAge: tokens.expiresIn * 1000,
+      path: '/',
     });
 
-    // Set refresh token in HTTP-only cookie with longer expiration
     const refreshTokenExpiry =
       this.configService.get<number>('jwt.refreshToken.expiresIn') * 1000;
     res.cookie('refresh_token', tokens.refreshToken, {
@@ -58,7 +56,7 @@ export class AuthController {
       secure: this.configService.get('NODE_ENV') === 'production',
       sameSite: 'strict',
       maxAge: refreshTokenExpiry,
-      path: '/', // Available on all paths
+      path: '/',
     });
   }
 
@@ -84,10 +82,8 @@ export class AuthController {
       deviceInfo,
     );
 
-    // Set cookies with tokens
     this.setCookies(res, authResponse.tokens);
 
-    // Return user data without tokens in the response body
     const { user } = authResponse;
     return { user };
   }
@@ -108,10 +104,8 @@ export class AuthController {
     };
     const authResponse = await this.authService.login(user, deviceInfo);
 
-    // Set cookies with tokens
     this.setCookies(res, authResponse.tokens);
 
-    // Return user data without tokens in the response body
     return { user: authResponse.user };
   }
 
@@ -123,14 +117,12 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
-    // Get refresh token from cookie
     const refreshToken = req.cookies['refresh_token'];
 
     if (refreshToken) {
       await this.authService.logout(user.id, refreshToken);
     }
 
-    // Clear cookies
     this.clearCookies(res);
 
     return { message: 'Logged out successfully' };
@@ -143,7 +135,6 @@ export class AuthController {
     @Req() req: Request & { deviceInfo?: IDeviceInfo },
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
-    // Get refresh token from cookie
     const refreshToken = req.cookies['refresh_token'];
 
     if (!refreshToken) {
@@ -161,12 +152,10 @@ export class AuthController {
         deviceInfo,
       );
 
-      // Set new cookies
       this.setCookies(res, newTokens);
 
       return { message: 'Token refreshed successfully' };
     } catch (error) {
-      // Clear cookies on error
       this.clearCookies(res);
 
       // If token is expired or invalid, return 410 Gone
@@ -177,7 +166,6 @@ export class AuthController {
         throw new HttpException('Refresh token expired', HttpStatus.GONE);
       }
 
-      // Re-throw the original error for other cases
       throw error;
     }
   }

@@ -3,6 +3,7 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  forwardRef,
 } from '@nestjs/common';
 import { IChannelService } from 'src/core/interfaces/services/channel.service.interface';
 import { IChannelRepository } from 'src/core/interfaces/repositories/channel.repository.interface';
@@ -10,6 +11,7 @@ import { Channel } from '../entities/channel.entity';
 import { CreateChannelDto } from '../dto/create-channel.dto';
 import { User } from 'src/modules/users/entities/user.entity';
 import { IUserService } from 'src/core/interfaces/services/user.service.interface';
+import { IWorkspaceService } from 'src/core/interfaces/services/workspace.service.interface';
 
 @Injectable()
 export class ChannelsService implements IChannelService {
@@ -18,6 +20,8 @@ export class ChannelsService implements IChannelService {
     private readonly channelRepository: IChannelRepository,
     @Inject('IUserService')
     private readonly userService: IUserService,
+    @Inject(forwardRef(() => 'IWorkspaceService'))
+    private readonly workspaceService?: IWorkspaceService,
   ) {}
 
   async create(
@@ -25,6 +29,24 @@ export class ChannelsService implements IChannelService {
     userId: string,
     createChannelDto: CreateChannelDto,
   ): Promise<Channel> {
+    if (!createChannelDto.sectionId) {
+      const workspace = await this.workspaceService.findById(workspaceId);
+
+      const defaultSection = workspace.sections.find(
+        (section) => section.isDefault,
+      );
+
+      if (defaultSection) {
+        createChannelDto.sectionId = defaultSection.id;
+      } else if (workspace.sections && workspace.sections.length > 0) {
+        createChannelDto.sectionId = workspace.sections[0].id;
+      } else {
+        throw new NotFoundException(
+          'No sections found in this workspace. Please create a section first.',
+        );
+      }
+    }
+
     const channel = await this.channelRepository.create({
       ...createChannelDto,
       workspaceId,
@@ -32,7 +54,11 @@ export class ChannelsService implements IChannelService {
     });
 
     const creator = await this.userService.findById(userId);
-    await this.channelRepository.addMember(channel.id, creator);
+    await this.channelRepository.addMember(channel.id, {
+      userId: creator.id,
+      role: 'admin',
+      joinedAt: new Date(),
+    });
 
     return channel;
   }
@@ -67,7 +93,11 @@ export class ChannelsService implements IChannelService {
       throw new ConflictException('User is already a member of this channel');
     }
 
-    await this.channelRepository.addMember(channelId, user);
+    await this.channelRepository.addMember(channelId, {
+      userId: user.id,
+      role: 'member',
+      joinedAt: new Date(),
+    });
   }
 
   async removeMember(channelId: string, userId: string): Promise<void> {

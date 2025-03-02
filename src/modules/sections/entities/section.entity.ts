@@ -41,6 +41,9 @@ export class Section implements ISection {
   @Column({ default: false })
   isDefault: boolean;
 
+  @Column({ default: false })
+  isDirectMessages: boolean;
+
   @Column()
   createdBy: string;
 
@@ -48,10 +51,17 @@ export class Section implements ISection {
   @JoinColumn({ name: 'createdBy' })
   creator: User;
 
+  @Column({ nullable: true })
+  userId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
   @Column({ type: 'jsonb', default: {} })
   settings: {
-    isCollapsed: boolean;
-    isPrivate: boolean;
+    isCollapsed?: boolean;
+    isPrivate?: boolean;
     allowedRoles?: string[];
   };
 

@@ -3,11 +3,9 @@ import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 
 function getKeysDirectory() {
-  // Sử dụng biến môi trường JWT_KEYS_DIRECTORY nếu có, nếu không thì sử dụng thư mục keys trong thư mục gốc của server
   const keysDirectory =
     process.env.JWT_KEYS_DIRECTORY || path.join(process.cwd(), 'keys');
 
-  // Đảm bảo thư mục tồn tại
   !fs.existsSync(keysDirectory) &&
     fs.mkdirSync(keysDirectory, { recursive: true });
 

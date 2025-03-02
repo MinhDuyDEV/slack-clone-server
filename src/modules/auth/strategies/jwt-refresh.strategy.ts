@@ -44,7 +44,6 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Invalid token type');
     }
 
-    // Get refresh token from cookie or body
     const refreshToken = req.cookies?.refresh_token || req.body?.refreshToken;
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
@@ -55,7 +54,6 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('User not found');
     }
 
-    // Add deviceInfo to request for use in controller
     req.deviceInfo = {
       ip: req.ip,
       userAgent: req.headers['user-agent'],

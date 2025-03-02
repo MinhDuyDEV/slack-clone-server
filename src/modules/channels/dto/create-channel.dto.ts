@@ -5,6 +5,7 @@ import {
   IsEnum,
   MinLength,
   MaxLength,
+  IsUUID,
 } from 'class-validator';
 import { ChannelType } from 'src/core/enums';
 
@@ -26,5 +27,11 @@ export class CreateChannelDto {
   @IsBoolean()
   @IsOptional()
   isPrivate?: boolean;
-}
 
+  @IsUUID()
+  sectionId: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isDefault?: boolean;
+}

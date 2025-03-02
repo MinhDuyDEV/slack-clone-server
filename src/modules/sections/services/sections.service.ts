@@ -2,14 +2,22 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { SectionRepository } from '../repositories/section.repository';
 import { CreateSectionDto, UpdateSectionDto } from '../dto';
 import { Section } from '../entities/section.entity';
+import { IWorkspaceService } from 'src/core/interfaces/services/workspace.service.interface';
+import { ISectionService } from 'src/core/interfaces/services/section.service.interface';
 
 @Injectable()
-export class SectionsService {
-  constructor(private readonly sectionRepository: SectionRepository) {}
+export class SectionsService implements ISectionService {
+  constructor(
+    private readonly sectionRepository: SectionRepository,
+    @Inject(forwardRef(() => 'IWorkspaceService'))
+    private readonly workspaceService?: IWorkspaceService,
+  ) {}
 
   async create(
     createSectionDto: CreateSectionDto,
@@ -36,7 +44,7 @@ export class SectionsService {
         ? Math.max(...existingSections.map((section) => section.order))
         : -1;
 
-    const section = this.sectionRepository.create({
+    const sectionData = {
       ...createSectionDto,
       createdBy: userId,
       order: highestOrder + 1,
@@ -44,12 +52,24 @@ export class SectionsService {
         isCollapsed: false,
         isPrivate: false,
       },
-    });
+    };
 
-    return this.sectionRepository.save(section);
+    return this.sectionRepository.create(sectionData);
   }
 
-  async findAll(workspaceId: string): Promise<Section[]> {
+  async findAll(workspaceId: string, userId?: string): Promise<Section[]> {
+    if (userId) {
+      // Nếu có userId, trả về tất cả các section không phải DM và các section DM của user đó
+      const sections =
+        await this.sectionRepository.findByWorkspaceId(workspaceId);
+      return sections.filter(
+        (section) =>
+          !section.isDirectMessages ||
+          (section.isDirectMessages && section.userId === userId),
+      );
+    }
+
+    // Nếu không có userId, trả về tất cả các section
     return this.sectionRepository.findByWorkspaceId(workspaceId);
   }
 
@@ -134,7 +154,7 @@ export class SectionsService {
       return section;
     });
 
-    return this.sectionRepository.save(updates);
+    return this.sectionRepository.saveMany(updates);
   }
 
   async getDefaultSection(workspaceId: string): Promise<Section> {
@@ -151,7 +171,7 @@ export class SectionsService {
       }
 
       // Create a default section
-      const newSection = this.sectionRepository.create({
+      const sectionData = {
         name: 'General',
         workspaceId,
         isDefault: true,
@@ -161,9 +181,9 @@ export class SectionsService {
           isCollapsed: false,
           isPrivate: false,
         },
-      });
+      };
 
-      return this.sectionRepository.save(newSection);
+      return this.sectionRepository.create(sectionData);
     }
 
     return defaultSection;

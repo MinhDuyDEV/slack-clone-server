@@ -39,15 +39,42 @@ export class ChannelsRepository
       .getMany();
   }
 
-  async addMember(channelId: string, user: User): Promise<void> {
+  async addMember(
+    channelId: string,
+    memberData: { userId: string; role: string; joinedAt: Date },
+  ): Promise<void> {
     const channel = await this.channelRepository.findOne({
       where: { id: channelId },
       relations: ['members'],
     });
 
     if (channel) {
-      channel.members = [...channel.members, user];
-      await this.channelRepository.save(channel);
+      const userRepository = this.channelRepository.manager.getRepository(User);
+      const user = await userRepository.findOne({
+        where: { id: memberData.userId },
+      });
+
+      if (user) {
+        if (!channel.members) {
+          channel.members = [];
+        }
+
+        const isMember = channel.members.some(
+          (member) => member.id === user.id,
+        );
+        if (!isMember) {
+          channel.members.push(user);
+          await this.channelRepository.save(channel);
+        }
+
+        await this.channelRepository.manager.query(
+          `INSERT INTO channel_members_roles (channel_id, user_id, role, joined_at)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (channel_id, user_id) DO UPDATE
+           SET role = $3, joined_at = $4`,
+          [channelId, memberData.userId, memberData.role, memberData.joinedAt],
+        );
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  forwardRef,
 } from '@nestjs/common';
 import { IWorkspaceService } from 'src/core/interfaces/services/workspace.service.interface';
 import { IWorkspaceRepository } from 'src/core/interfaces/repositories/workspace.repository.interface';
@@ -19,6 +20,8 @@ import { WorkspaceInvite } from '../entities/workspace-invite.entity';
 import { WorkspaceInviteRepository } from '../repositories/workspace-invite.repository';
 import { randomBytes } from 'crypto';
 import { add } from 'date-fns';
+import { ISectionService } from 'src/core/interfaces/services/section.service.interface';
+import { IChannelService } from 'src/core/interfaces/services/channel.service.interface';
 
 @Injectable()
 export class WorkspacesService implements IWorkspaceService {
@@ -26,6 +29,10 @@ export class WorkspacesService implements IWorkspaceService {
     @Inject('IWorkspaceRepository')
     private readonly workspaceRepository: IWorkspaceRepository,
     private readonly inviteRepository: WorkspaceInviteRepository,
+    @Inject(forwardRef(() => 'ISectionService'))
+    private readonly sectionService: ISectionService,
+    @Inject(forwardRef(() => 'IChannelService'))
+    private readonly channelService: IChannelService,
   ) {}
 
   async create(
@@ -61,7 +68,59 @@ export class WorkspacesService implements IWorkspaceService {
       joinedAt: new Date(),
     });
 
-    return workspace;
+    const generalSection = await this.sectionService.create(
+      {
+        name: 'Channels',
+        workspaceId: workspace.id,
+        isDefault: true,
+        order: 0,
+      },
+      userId,
+    );
+
+    const userDMSection = await this.sectionService.create(
+      {
+        name: 'Direct Messages',
+        workspaceId: workspace.id,
+        isDirectMessages: true,
+        isDefault: false,
+        order: 1,
+        userId: userId,
+      },
+      userId,
+    );
+
+    const generalChannel = await this.channelService.create(
+      workspace.id,
+      userId,
+      {
+        name: 'general',
+        description: 'General discussions',
+        sectionId: generalSection.id,
+        isDefault: true,
+        isPrivate: false,
+      },
+    );
+
+    await this.workspaceRepository.update(workspace.id, {
+      settings: {
+        ...workspace.settings,
+        defaultChannelId: generalChannel.id,
+        defaultSectionId: generalSection.id,
+        ownerDirectMessageSectionId: userDMSection.id,
+      },
+    });
+
+    const [completeWorkspace, sections, channels] = await Promise.all([
+      this.workspaceRepository.findById(workspace.id),
+      this.sectionService.findAll(workspace.id),
+      this.channelService.findByWorkspace(workspace.id),
+    ]);
+
+    completeWorkspace.sections = sections;
+    completeWorkspace.channels = channels;
+
+    return completeWorkspace;
   }
 
   private generateSlug(name: string): string {
@@ -96,7 +155,7 @@ export class WorkspacesService implements IWorkspaceService {
     userId: string,
     role: WorkspaceRole = WorkspaceRole.MEMBER,
   ): Promise<WorkspaceMember> {
-    await this.findById(workspaceId);
+    const workspace = await this.findById(workspaceId);
 
     const existingMember = await this.workspaceRepository.findMember(
       workspaceId,
@@ -119,6 +178,20 @@ export class WorkspacesService implements IWorkspaceService {
       workspaceId,
       memberData,
     );
+
+    // Tạo section Direct Messages riêng cho thành viên mới
+    await this.sectionService.create(
+      {
+        name: 'Direct Messages',
+        workspaceId: workspace.id,
+        isDirectMessages: true,
+        isDefault: false,
+        order: 1, // Có thể cần điều chỉnh order dựa trên số lượng section hiện có
+        userId: userId, // Liên kết section với user
+      },
+      userId,
+    );
+
     return newMember as WorkspaceMember;
   }
 
@@ -344,6 +417,19 @@ export class WorkspacesService implements IWorkspaceService {
     const member = await this.workspaceRepository.addMember(
       invite.workspaceId,
       memberData,
+    );
+
+    // Tạo section Direct Messages riêng cho thành viên mới tham gia
+    await this.sectionService.create(
+      {
+        name: 'Direct Messages',
+        workspaceId: invite.workspaceId,
+        isDirectMessages: true,
+        isDefault: false,
+        order: 1, // Có thể cần điều chỉnh order dựa trên số lượng section hiện có
+        userId: userId, // Liên kết section với user
+      },
+      userId,
     );
 
     if (!invite.multiUse) {

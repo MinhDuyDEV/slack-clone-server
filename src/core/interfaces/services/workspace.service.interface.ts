@@ -11,8 +11,8 @@ export interface IWorkspaceService {
     userId: string,
     createWorkspaceDto: CreateWorkspaceDto,
   ): Promise<Workspace>;
-  findById(id: string): Promise<Workspace>;
-  findBySlug(slug: string): Promise<Workspace>;
+  findById(id: string, userId?: string): Promise<Workspace>;
+  findBySlug(slug: string, userId?: string): Promise<Workspace>;
   findUserWorkspaces(userId: string): Promise<Workspace[]>;
 
   // Member management

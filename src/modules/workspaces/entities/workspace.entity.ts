@@ -55,6 +55,8 @@ export class Workspace implements IWorkspace {
     allowDirectMessages: boolean;
     defaultChannelId?: string;
     defaultSectionId?: string;
+    directMessagesSectionId?: string;
+    ownerDirectMessageSectionId?: string;
   };
 
   @CreateDateColumn()

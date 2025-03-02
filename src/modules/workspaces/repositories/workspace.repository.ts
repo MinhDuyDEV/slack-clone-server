@@ -48,7 +48,10 @@ export class WorkspacesRepository
     return workspace;
   }
 
-  async findUserWorkspaces(userId: string): Promise<Workspace[]> {
+  async findUserWorkspaces(
+    userId: string,
+    includeDetails: boolean = false,
+  ): Promise<Workspace[]> {
     const members = await this.memberRepository.find({
       where: { userId },
       relations: ['workspace'],
@@ -64,36 +67,39 @@ export class WorkspacesRepository
       relations: ['members'],
     });
 
-    const [allSections, allChannels] = await Promise.all([
-      this.workspaceRepository.manager.getRepository(Section).find({
-        where: { workspaceId: In(workspaceIds) },
-      }),
-      this.workspaceRepository.manager.getRepository(Channel).find({
-        where: { workspaceId: In(workspaceIds) },
-      }),
-    ]);
+    // Chỉ tải sections và channels nếu cần thiết
+    if (includeDetails) {
+      const [allSections, allChannels] = await Promise.all([
+        this.workspaceRepository.manager.getRepository(Section).find({
+          where: { workspaceId: In(workspaceIds) },
+        }),
+        this.workspaceRepository.manager.getRepository(Channel).find({
+          where: { workspaceId: In(workspaceIds) },
+        }),
+      ]);
 
-    const sectionsByWorkspace = {};
-    const channelsByWorkspace = {};
+      const sectionsByWorkspace = {};
+      const channelsByWorkspace = {};
 
-    allSections.forEach((section) => {
-      if (!sectionsByWorkspace[section.workspaceId]) {
-        sectionsByWorkspace[section.workspaceId] = [];
-      }
-      sectionsByWorkspace[section.workspaceId].push(section);
-    });
+      allSections.forEach((section) => {
+        if (!sectionsByWorkspace[section.workspaceId]) {
+          sectionsByWorkspace[section.workspaceId] = [];
+        }
+        sectionsByWorkspace[section.workspaceId].push(section);
+      });
 
-    allChannels.forEach((channel) => {
-      if (!channelsByWorkspace[channel.workspaceId]) {
-        channelsByWorkspace[channel.workspaceId] = [];
-      }
-      channelsByWorkspace[channel.workspaceId].push(channel);
-    });
+      allChannels.forEach((channel) => {
+        if (!channelsByWorkspace[channel.workspaceId]) {
+          channelsByWorkspace[channel.workspaceId] = [];
+        }
+        channelsByWorkspace[channel.workspaceId].push(channel);
+      });
 
-    workspaces.forEach((workspace) => {
-      workspace.sections = sectionsByWorkspace[workspace.id] || [];
-      workspace.channels = channelsByWorkspace[workspace.id] || [];
-    });
+      workspaces.forEach((workspace) => {
+        workspace.sections = sectionsByWorkspace[workspace.id] || [];
+        workspace.channels = channelsByWorkspace[workspace.id] || [];
+      });
+    }
 
     return workspaces;
   }
@@ -129,6 +135,12 @@ export class WorkspacesRepository
 
   async removeMember(workspaceId: string, userId: string): Promise<void> {
     await this.memberRepository.delete({ workspaceId, userId });
+  }
+
+  async getMembers(workspaceId: string): Promise<WorkspaceMember[]> {
+    return this.memberRepository.find({
+      where: { workspaceId },
+    });
   }
 
   async findById(id: string): Promise<Workspace | null> {

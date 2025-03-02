@@ -89,6 +89,27 @@ export class WorkspacesController {
     return response;
   }
 
+  /**
+   * Format workspace response with basic information only (no sections or channels)
+   */
+  private formatBasicWorkspaceResponse(workspace: Workspace) {
+    return {
+      id: workspace.id,
+      name: workspace.name,
+      slug: workspace.slug,
+      description: workspace.description,
+      logo: workspace.logo,
+      ownerId: workspace.ownerId,
+      settings: workspace.settings,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt,
+      // Add some summary information
+      memberCount: workspace.members?.length || 0,
+      channelCount: workspace.channels?.length || 0,
+      sectionCount: workspace.sections?.length || 0,
+    };
+  }
+
   @Post()
   async create(
     @CurrentUser() user: User,
@@ -105,10 +126,9 @@ export class WorkspacesController {
   @Get('my')
   async getMyWorkspaces(@CurrentUser() user: User) {
     const workspaces = await this.workspaceService.findUserWorkspaces(user.id);
-    return Promise.all(
-      workspaces.map((workspace) =>
-        this.formatWorkspaceResponse(workspace, user.id),
-      ),
+    // Return only basic workspace information without sections and channels
+    return workspaces.map((workspace) =>
+      this.formatBasicWorkspaceResponse(workspace),
     );
   }
 

@@ -10,7 +10,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const { appConfig, corsConfig } = app.get(AppConfigService);
+  const { appConfig } = app.get(AppConfigService);
   app.use(cookieParser());
   app.setGlobalPrefix(appConfig.apiPrefix);
   app.useGlobalPipes(
@@ -20,9 +20,13 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+  // app.enableCors({
+  //   origin: [corsConfig.origin],
+  //   credentials: corsConfig.credentials,
+  // });
   app.enableCors({
-    origin: [corsConfig.origin],
-    credentials: corsConfig.credentials,
+    origin: 'http://localhost:3000',
+    credentials: true,
   });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(

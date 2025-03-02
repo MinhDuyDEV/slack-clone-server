@@ -146,8 +146,11 @@ export class WorkspacesService implements IWorkspaceService {
     return workspace;
   }
 
-  async findUserWorkspaces(userId: string): Promise<Workspace[]> {
-    return this.workspaceRepository.findUserWorkspaces(userId);
+  async findUserWorkspaces(
+    userId: string,
+    includeDetails: boolean = false,
+  ): Promise<Workspace[]> {
+    return this.workspaceRepository.findUserWorkspaces(userId, includeDetails);
   }
 
   async addMember(

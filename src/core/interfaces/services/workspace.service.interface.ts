@@ -13,7 +13,10 @@ export interface IWorkspaceService {
   ): Promise<Workspace>;
   findById(id: string, userId?: string): Promise<Workspace>;
   findBySlug(slug: string, userId?: string): Promise<Workspace>;
-  findUserWorkspaces(userId: string): Promise<Workspace[]>;
+  findUserWorkspaces(
+    userId: string,
+    includeDetails?: boolean,
+  ): Promise<Workspace[]>;
 
   // Member management
   addMember(

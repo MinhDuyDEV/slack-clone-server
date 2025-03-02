@@ -15,13 +15,13 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { ChannelsModule } from './modules/channels/channels.module';
 import { SectionsModule } from './modules/sections/sections.module';
-
+import corsConfig from './config/configurations/cors.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [databaseConfig, jwtConfig, appConfig],
+      load: [databaseConfig, jwtConfig, appConfig, corsConfig],
       validationSchema,
       validationOptions: {
         allowUnknown: true,

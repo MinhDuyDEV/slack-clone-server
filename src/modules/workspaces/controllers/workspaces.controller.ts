@@ -113,6 +113,7 @@ export class WorkspacesController {
   }
 
   @Get(':id')
+  @UseGuards(WorkspaceRoleGuard)
   async findById(@Param('id') id: string, @CurrentUser() user: User) {
     const workspace = await this.workspaceService.findById(id, user.id);
     return this.formatWorkspaceResponse(workspace, user.id);

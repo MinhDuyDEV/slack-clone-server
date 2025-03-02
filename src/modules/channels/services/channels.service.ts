@@ -29,9 +29,28 @@ export class ChannelsService implements IChannelService {
     userId: string,
     createChannelDto: CreateChannelDto,
   ): Promise<Channel> {
-    if (!createChannelDto.sectionId) {
-      const workspace = await this.workspaceService.findById(workspaceId);
+    // Kiểm tra workspace có tồn tại không
+    const workspace = await this.workspaceService.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException(`Workspace with ID ${workspaceId} not found`);
+    }
 
+    // Kiểm tra tên channel không được trùng trong cùng workspace
+    const existingChannels =
+      await this.channelRepository.findByWorkspace(workspaceId);
+    const channelWithSameName = existingChannels.find(
+      (channel) =>
+        channel.name.toLowerCase() === createChannelDto.name.toLowerCase(),
+    );
+
+    if (channelWithSameName) {
+      throw new ConflictException(
+        `A channel with the name "${createChannelDto.name}" already exists in this workspace`,
+      );
+    }
+
+    // Xử lý trường hợp không có sectionId
+    if (!createChannelDto.sectionId) {
       const defaultSection = workspace.sections.find(
         (section) => section.isDefault,
       );
@@ -43,6 +62,17 @@ export class ChannelsService implements IChannelService {
       } else {
         throw new NotFoundException(
           'No sections found in this workspace. Please create a section first.',
+        );
+      }
+    } else {
+      // Kiểm tra section có tồn tại trong workspace này không
+      const sectionExists = workspace.sections.some(
+        (section) => section.id === createChannelDto.sectionId,
+      );
+
+      if (!sectionExists) {
+        throw new NotFoundException(
+          `Section with ID ${createChannelDto.sectionId} not found in this workspace`,
         );
       }
     }
@@ -122,7 +152,42 @@ export class ChannelsService implements IChannelService {
     channelId: string,
     data: Partial<CreateChannelDto>,
   ): Promise<Channel> {
-    await this.findById(channelId);
+    const channel = await this.findById(channelId);
+
+    // Kiểm tra tên channel không được trùng trong cùng workspace khi cập nhật tên
+    if (data.name) {
+      const existingChannels = await this.channelRepository.findByWorkspace(
+        channel.workspaceId,
+      );
+      const channelWithSameName = existingChannels.find(
+        (c) =>
+          c.id !== channelId &&
+          c.name.toLowerCase() === data.name.toLowerCase(),
+      );
+
+      if (channelWithSameName) {
+        throw new ConflictException(
+          `A channel with the name "${data.name}" already exists in this workspace`,
+        );
+      }
+    }
+
+    // Kiểm tra section có tồn tại trong workspace này không khi cập nhật sectionId
+    if (data.sectionId) {
+      const workspace = await this.workspaceService.findById(
+        channel.workspaceId,
+      );
+      const sectionExists = workspace.sections.some(
+        (section) => section.id === data.sectionId,
+      );
+
+      if (!sectionExists) {
+        throw new NotFoundException(
+          `Section with ID ${data.sectionId} not found in this workspace`,
+        );
+      }
+    }
+
     return this.channelRepository.update(channelId, data);
   }
 

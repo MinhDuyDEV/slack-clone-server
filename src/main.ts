@@ -11,7 +11,6 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const { appConfig, corsConfig } = app.get(AppConfigService);
-
   app.use(cookieParser());
   app.setGlobalPrefix(appConfig.apiPrefix);
   app.useGlobalPipes(

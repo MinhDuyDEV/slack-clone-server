@@ -419,15 +419,14 @@ export class WorkspacesService implements IWorkspaceService {
       memberData,
     );
 
-    // Tạo section Direct Messages riêng cho thành viên mới tham gia
     await this.sectionService.create(
       {
         name: 'Direct Messages',
         workspaceId: invite.workspaceId,
         isDirectMessages: true,
         isDefault: false,
-        order: 1, // Có thể cần điều chỉnh order dựa trên số lượng section hiện có
-        userId: userId, // Liên kết section với user
+        order: 1,
+        userId: userId,
       },
       userId,
     );

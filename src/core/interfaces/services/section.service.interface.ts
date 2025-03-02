@@ -9,4 +9,11 @@ export interface ISectionService {
   remove(id: string): Promise<void>;
   reorder(workspaceId: string, sectionIds: string[]): Promise<Section[]>;
   getDefaultSection(workspaceId: string): Promise<Section>;
+  insertBetween(
+    workspaceId: string,
+    createSectionDto: CreateSectionDto,
+    userId: string,
+    beforeSectionId?: string,
+    afterSectionId?: string,
+  ): Promise<Section>;
 }

@@ -1,26 +1,26 @@
 import { IBaseEntity } from './base.interface';
+import { IUser } from './user.interface';
+import { IChannel } from './channel.interface';
+import { MessageType } from 'src/core/enums';
+import { IAttachment } from './attachment.interface';
+import { IReaction } from './reaction.interface';
 
 export interface IMessage extends IBaseEntity {
   content: string;
-  type: 'text' | 'file' | 'system';
+  type: MessageType;
 
   channelId: string;
+  channel: IChannel;
+
   userId: string;
+  user: IUser;
+
   parentId?: string;
+  parent?: IMessage;
+  replies?: IMessage[];
 
-  attachments?: {
-    type: 'image' | 'file' | 'link';
-    url: string;
-    name: string;
-    size?: number;
-    mimeType?: string;
-  }[];
-
-  reactions?: {
-    emoji: string;
-    count: number;
-    users: string[];
-  }[];
+  attachments?: IAttachment[];
+  reactions?: IReaction[];
 
   edited?: {
     at: Date;

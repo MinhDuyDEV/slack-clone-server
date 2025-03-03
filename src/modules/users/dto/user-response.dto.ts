@@ -1,27 +1,33 @@
-import { UserStatus } from 'src/core/enums';
+import { Exclude, Expose } from 'class-transformer';
 import { User } from '../entities/user.entity';
 
+@Exclude()
 export class UserResponseDto {
+  @Expose()
   id: string;
-  email: string;
-  username: string;
-  fullName?: string;
-  displayName?: string;
-  avatar?: string;
-  status: UserStatus;
-  isEmailVerified: boolean;
-  createdAt: Date;
 
-  constructor(user: User) {
-    this.id = user.id;
-    this.email = user.email;
-    this.username = user.username;
-    this.fullName = user.fullName;
-    this.displayName = user.displayName;
-    this.avatar = user.avatar;
-    this.status = user.status;
-    this.isEmailVerified = user.isEmailVerified;
-    this.createdAt = user.createdAt;
+  @Expose()
+  username: string;
+
+  @Expose()
+  fullName: string;
+
+  @Expose()
+  displayName: string;
+
+  @Expose()
+  email: string;
+  @Expose()
+  avatar: string;
+
+  @Expose()
+  isOnline: boolean;
+
+  @Expose()
+  lastSeen: Date;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
   }
 
   static fromEntity(user: User): UserResponseDto {

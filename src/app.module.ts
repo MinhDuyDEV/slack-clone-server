@@ -15,6 +15,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { ChannelsModule } from './modules/channels/channels.module';
 import { SectionsModule } from './modules/sections/sections.module';
+import { MessagesModule } from './modules/messages/messages.module';
 import corsConfig from './config/configurations/cors.config';
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import corsConfig from './config/configurations/cors.config';
     WorkspacesModule,
     ChannelsModule,
     SectionsModule,
+    MessagesModule,
   ],
   providers: [
     AppConfigService,

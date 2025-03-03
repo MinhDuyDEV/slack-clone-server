@@ -16,7 +16,7 @@ import { WorkspaceRoles } from 'src/common/decorators/workspace-roles.decorator'
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { User } from 'src/modules/users/entities/user.entity';
 import { CreateChannelDto } from '../dto/create-channel.dto';
-import { WorkspaceRole } from 'src/core/enums';
+import { WorkspaceRole, ChannelType } from 'src/core/enums';
 
 @Controller('workspaces/:workspaceId/channels')
 @UseGuards(JwtAuthGuard)
@@ -115,5 +115,45 @@ export class ChannelsController {
   async delete(@Param('channelId') channelId: string) {
     await this.channelService.delete(channelId);
     return { message: 'Channel deleted successfully' };
+  }
+
+  @Post('direct-messages')
+  async createDirectMessage(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+    @Body('targetUserIds') targetUserIds: string[],
+    @Body('sectionId') sectionId?: string,
+  ) {
+    return this.channelService.createDirectMessageChannel(
+      workspaceId,
+      user.id,
+      targetUserIds,
+      sectionId,
+    );
+  }
+
+  @Get('direct-messages')
+  async getMyDirectMessages(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    // Lấy tất cả các channel trong workspace
+    const allChannels = await this.channelService.findByWorkspace(workspaceId);
+
+    // Lọc ra các channel có type là DIRECT và user là thành viên
+    const directChannels = [];
+    for (const channel of allChannels) {
+      if (channel.type === ChannelType.DIRECT) {
+        const isUserMember = await this.channelService.isMember(
+          channel.id,
+          user.id,
+        );
+        if (isUserMember) {
+          directChannels.push(channel);
+        }
+      }
+    }
+
+    return directChannels;
   }
 }

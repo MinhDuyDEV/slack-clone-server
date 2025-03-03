@@ -55,8 +55,9 @@ export class Channel implements IChannel {
   @JoinColumn({ name: 'createdBy' })
   creator: User;
 
-  @Column({ default: false })
-  isPrivate: boolean;
+  get isPrivate(): boolean {
+    return this.type === ChannelType.PRIVATE;
+  }
 
   @Column({ default: false })
   isDefault: boolean;

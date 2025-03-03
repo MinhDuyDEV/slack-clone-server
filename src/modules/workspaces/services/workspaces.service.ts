@@ -22,6 +22,7 @@ import { randomBytes } from 'crypto';
 import { add } from 'date-fns';
 import { ISectionService } from 'src/core/interfaces/services/section.service.interface';
 import { IChannelService } from 'src/core/interfaces/services/channel.service.interface';
+import { ChannelType } from 'src/core/enums';
 
 @Injectable()
 export class WorkspacesService implements IWorkspaceService {
@@ -50,6 +51,7 @@ export class WorkspacesService implements IWorkspaceService {
       throw new ConflictException('Workspace with this slug already exists');
     }
 
+    // Tạo workspace
     const workspace = await this.workspaceRepository.create({
       ...createWorkspaceDto,
       ownerId: userId,
@@ -60,6 +62,7 @@ export class WorkspacesService implements IWorkspaceService {
       },
     });
 
+    // Thêm người dùng làm thành viên
     await this.workspaceRepository.addMember(workspace.id, {
       userId,
       role: WorkspaceRole.OWNER,
@@ -68,6 +71,7 @@ export class WorkspacesService implements IWorkspaceService {
       joinedAt: new Date(),
     });
 
+    // Tạo section chung
     const generalSection = await this.sectionService.create(
       {
         name: 'Channels',
@@ -78,18 +82,20 @@ export class WorkspacesService implements IWorkspaceService {
       userId,
     );
 
+    // Tạo section Direct Messages cho người dùng
     const userDMSection = await this.sectionService.create(
       {
         name: 'Direct Messages',
         workspaceId: workspace.id,
         isDirectMessages: true,
         isDefault: false,
-        order: 1,
+        order: 10000,
         userId: userId,
       },
       userId,
     );
 
+    // Tạo kênh general
     const generalChannel = await this.channelService.create(
       workspace.id,
       userId,
@@ -98,10 +104,19 @@ export class WorkspacesService implements IWorkspaceService {
         description: 'General discussions',
         sectionId: generalSection.id,
         isDefault: true,
-        isPrivate: false,
+        type: ChannelType.PUBLIC,
       },
     );
 
+    // Tạo kênh Direct Message với chính mình
+    await this.channelService.createDirectMessageChannel(
+      workspace.id,
+      userId,
+      [userId],
+      userDMSection.id,
+    );
+
+    // Cập nhật cài đặt workspace
     await this.workspaceRepository.update(workspace.id, {
       settings: {
         ...workspace.settings,
@@ -111,6 +126,7 @@ export class WorkspacesService implements IWorkspaceService {
       },
     });
 
+    // Lấy dữ liệu đầy đủ của workspace
     const [completeWorkspace, sections, channels] = await Promise.all([
       this.workspaceRepository.findById(workspace.id),
       this.sectionService.findAll(workspace.id),
@@ -130,19 +146,55 @@ export class WorkspacesService implements IWorkspaceService {
       .replace(/^-|-$/g, '');
   }
 
-  async findById(id: string): Promise<Workspace> {
+  async findById(id: string, userId?: string): Promise<Workspace> {
     const workspace = await this.workspaceRepository.findById(id);
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
+
+    // Nếu có userId, lọc các kênh private mà người dùng không phải là thành viên
+    if (userId && workspace.channels && workspace.channels.length > 0) {
+      // Lấy danh sách kênh mà người dùng là thành viên
+      const userChannels = await this.channelService.findUserChannels(
+        id,
+        userId,
+      );
+      const userChannelIds = userChannels.map((channel) => channel.id);
+
+      // Lọc các kênh: giữ lại kênh PUBLIC hoặc kênh PRIVATE/DIRECT mà người dùng là thành viên
+      workspace.channels = workspace.channels.filter(
+        (channel) =>
+          channel.type === ChannelType.PUBLIC ||
+          userChannelIds.includes(channel.id),
+      );
+    }
+
     return workspace;
   }
 
-  async findBySlug(slug: string): Promise<Workspace> {
+  async findBySlug(slug: string, userId?: string): Promise<Workspace> {
     const workspace = await this.workspaceRepository.findBySlug(slug);
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
+
+    // Nếu có userId, lọc các kênh private mà người dùng không phải là thành viên
+    if (userId && workspace.channels && workspace.channels.length > 0) {
+      // Lấy danh sách kênh mà người dùng là thành viên
+      const userChannels = await this.channelService.findUserChannels(
+        workspace.id,
+        userId,
+      );
+      const userChannelIds = userChannels.map((channel) => channel.id);
+
+      // Lọc các kênh: giữ lại kênh PUBLIC hoặc kênh PRIVATE/DIRECT mà người dùng là thành viên
+      workspace.channels = workspace.channels.filter(
+        (channel) =>
+          channel.type === ChannelType.PUBLIC ||
+          userChannelIds.includes(channel.id),
+      );
+    }
+
     return workspace;
   }
 
@@ -150,7 +202,33 @@ export class WorkspacesService implements IWorkspaceService {
     userId: string,
     includeDetails: boolean = false,
   ): Promise<Workspace[]> {
-    return this.workspaceRepository.findUserWorkspaces(userId, includeDetails);
+    const workspaces = await this.workspaceRepository.findUserWorkspaces(
+      userId,
+      includeDetails,
+    );
+
+    // Nếu includeDetails = true, lọc các kênh private mà người dùng không phải là thành viên
+    if (includeDetails && workspaces.length > 0) {
+      for (const workspace of workspaces) {
+        if (workspace.channels && workspace.channels.length > 0) {
+          // Lấy danh sách kênh mà người dùng là thành viên
+          const userChannels = await this.channelService.findUserChannels(
+            workspace.id,
+            userId,
+          );
+          const userChannelIds = userChannels.map((channel) => channel.id);
+
+          // Lọc các kênh: giữ lại kênh PUBLIC hoặc kênh PRIVATE/DIRECT mà người dùng là thành viên
+          workspace.channels = workspace.channels.filter(
+            (channel) =>
+              channel.type === ChannelType.PUBLIC ||
+              userChannelIds.includes(channel.id),
+          );
+        }
+      }
+    }
+
+    return workspaces;
   }
 
   async addMember(
@@ -169,6 +247,11 @@ export class WorkspacesService implements IWorkspaceService {
       throw new ConflictException('User is already a member of this workspace');
     }
 
+    // Kiểm tra xem người dùng đã có section Direct Messages trong workspace này chưa
+    const userDMSection = workspace.sections.find(
+      (section) => section.isDirectMessages && section.userId === userId,
+    );
+
     const memberData: Partial<IWorkspaceMember> = {
       userId,
       role,
@@ -177,22 +260,38 @@ export class WorkspacesService implements IWorkspaceService {
       joinedAt: new Date(),
     };
 
+    // Thêm thành viên mới
     const newMember = await this.workspaceRepository.addMember(
       workspaceId,
       memberData,
     );
 
-    // Tạo section Direct Messages riêng cho thành viên mới
-    await this.sectionService.create(
-      {
-        name: 'Direct Messages',
-        workspaceId: workspace.id,
-        isDirectMessages: true,
-        isDefault: false,
-        order: 1, // Có thể cần điều chỉnh order dựa trên số lượng section hiện có
-        userId: userId, // Liên kết section với user
-      },
+    let dmSectionId: string;
+
+    // Nếu người dùng chưa có section Direct Messages, tạo mới
+    if (!userDMSection) {
+      const userDMSection = await this.sectionService.create(
+        {
+          name: 'Direct Messages',
+          workspaceId: workspace.id,
+          isDirectMessages: true,
+          isDefault: false,
+          order: 10000, // Sử dụng khoảng cách 10000 như đã cập nhật
+          userId: userId, // Liên kết section với user
+        },
+        userId,
+      );
+      dmSectionId = userDMSection.id;
+    } else {
+      dmSectionId = userDMSection.id;
+    }
+
+    // Tạo kênh Direct Message với chính người dùng (self DM)
+    await this.channelService.createDirectMessageChannel(
+      workspace.id,
       userId,
+      [userId], // Thêm chính người dùng vào danh sách targetUserIds
+      dmSectionId,
     );
 
     return newMember as WorkspaceMember;
@@ -409,6 +508,14 @@ export class WorkspacesService implements IWorkspaceService {
       throw new ConflictException('You are already a member of this workspace');
     }
 
+    // Lấy thông tin workspace
+    const workspace = await this.findById(invite.workspaceId);
+
+    // Kiểm tra xem người dùng đã có section Direct Messages trong workspace này chưa
+    const userDMSection = workspace.sections.find(
+      (section) => section.isDirectMessages && section.userId === userId,
+    );
+
     const memberData: Partial<IWorkspaceMember> = {
       userId,
       role: invite.role,
@@ -417,23 +524,41 @@ export class WorkspacesService implements IWorkspaceService {
       invitedBy: invite.createdBy,
     };
 
+    // Thêm thành viên mới
     const member = await this.workspaceRepository.addMember(
       invite.workspaceId,
       memberData,
     );
 
-    await this.sectionService.create(
-      {
-        name: 'Direct Messages',
-        workspaceId: invite.workspaceId,
-        isDirectMessages: true,
-        isDefault: false,
-        order: 1,
-        userId: userId,
-      },
+    let dmSectionId: string;
+
+    // Nếu người dùng chưa có section Direct Messages, tạo mới
+    if (!userDMSection) {
+      const newDMSection = await this.sectionService.create(
+        {
+          name: 'Direct Messages',
+          workspaceId: invite.workspaceId,
+          isDirectMessages: true,
+          isDefault: false,
+          order: 10000, // Sử dụng khoảng cách 10000 như đã cập nhật
+          userId: userId,
+        },
+        userId,
+      );
+      dmSectionId = newDMSection.id;
+    } else {
+      dmSectionId = userDMSection.id;
+    }
+
+    // Tạo kênh Direct Message với chính người dùng (self DM)
+    await this.channelService.createDirectMessageChannel(
+      invite.workspaceId,
       userId,
+      [userId],
+      dmSectionId,
     );
 
+    // Cập nhật trạng thái mã mời
     if (!invite.multiUse) {
       await this.inviteRepository.softDelete(invite.id);
     } else {

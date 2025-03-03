@@ -20,5 +20,13 @@ export interface IChannelService {
   update(channelId: string, data: Partial<CreateChannelDto>): Promise<Channel>;
 
   delete(channelId: string): Promise<void>;
-}
 
+  createDirectMessageChannel(
+    workspaceId: string,
+    currentUserId: string,
+    targetUserIds: string[],
+    sectionId?: string,
+  ): Promise<Channel>;
+
+  isMember(channelId: string, userId: string): Promise<boolean>;
+}

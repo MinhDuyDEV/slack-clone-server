@@ -24,10 +24,6 @@ export class CreateChannelDto {
   @IsOptional()
   type?: ChannelType;
 
-  @IsBoolean()
-  @IsOptional()
-  isPrivate?: boolean;
-
   @IsUUID()
   sectionId: string;
 

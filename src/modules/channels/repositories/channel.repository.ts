@@ -5,6 +5,7 @@ import { IChannelRepository } from 'src/core/interfaces/repositories/channel.rep
 import { Channel } from '../entities/channel.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { BaseRepository } from 'src/core/repositories/base.repository';
+import { ChannelType } from 'src/core/enums';
 
 @Injectable()
 export class ChannelsRepository
@@ -29,14 +30,27 @@ export class ChannelsRepository
     workspaceId: string,
     userId: string,
   ): Promise<Channel[]> {
-    return this.channelRepository
-      .createQueryBuilder('channel')
-      .leftJoinAndSelect('channel.members', 'member')
-      .where('channel.workspaceId = :workspaceId', { workspaceId })
-      .andWhere('(channel.isPrivate = false OR member.id = :userId)', {
-        userId,
-      })
-      .getMany();
+    // Lấy tất cả các channel trong workspace cùng với members
+    const channels = await this.channelRepository.find({
+      where: { workspaceId },
+      relations: ['members'],
+    });
+
+    // Lọc các channel:
+    // 1. Giữ lại channel PUBLIC
+    // 2. Giữ lại channel PRIVATE hoặc DIRECT mà user là thành viên
+    return channels.filter((channel) => {
+      // Nếu channel là PUBLIC, luôn trả về true
+      if (channel.type === ChannelType.PUBLIC) {
+        return true;
+      }
+
+      // Nếu channel là PRIVATE hoặc DIRECT, kiểm tra xem user có phải là thành viên không
+      return (
+        channel.members &&
+        channel.members.some((member) => member.id === userId)
+      );
+    });
   }
 
   async addMember(

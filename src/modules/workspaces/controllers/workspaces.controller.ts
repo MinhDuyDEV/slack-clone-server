@@ -53,6 +53,44 @@ export class WorkspacesController {
       }
     }
 
+    if (currentUserId && workspace.id) {
+      const directMessageSections =
+        workspace.sections?.filter(
+          (section) =>
+            section.isDirectMessages && section.userId === currentUserId,
+        ) || [];
+
+      if (directMessageSections.length > 0) {
+        const allChannels = workspace.channels || [];
+
+        const directChannels = allChannels.filter(
+          (channel) =>
+            channel.type === 'direct' &&
+            channel.members?.some((member) => member.id === currentUserId),
+        );
+
+        if (directChannels.length > 0 && directMessageSections.length > 0) {
+          const dmSectionId = directMessageSections[0].id;
+
+          if (!channelsBySection.has(dmSectionId)) {
+            channelsBySection.set(dmSectionId, []);
+          }
+
+          for (const channel of directChannels) {
+            channelsBySection.get(dmSectionId).push({
+              id: channel.id,
+              name: channel.name,
+              description: channel.description,
+              type: channel.type,
+              isPrivate: channel.isPrivate,
+              isDefault: channel.isDefault,
+              sectionId: dmSectionId,
+            });
+          }
+        }
+      }
+    }
+
     const response = {
       id: workspace.id,
       name: workspace.name,
@@ -126,7 +164,6 @@ export class WorkspacesController {
   @Get('my')
   async getMyWorkspaces(@CurrentUser() user: User) {
     const workspaces = await this.workspaceService.findUserWorkspaces(user.id);
-    // Return only basic workspace information without sections and channels
     return workspaces.map((workspace) =>
       this.formatBasicWorkspaceResponse(workspace),
     );

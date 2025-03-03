@@ -24,7 +24,13 @@ export class SectionsService implements ISectionService {
     createSectionDto: CreateSectionDto,
     userId: string,
   ): Promise<Section> {
-    const { workspaceId, isDefault, name } = createSectionDto;
+    const {
+      workspaceId,
+      isDefault,
+      name,
+      isDirectMessages,
+      userId: sectionUserId,
+    } = createSectionDto;
 
     // Kiểm tra workspace có tồn tại không
     if (this.workspaceService) {
@@ -37,17 +43,34 @@ export class SectionsService implements ISectionService {
       }
     }
 
-    // Kiểm tra tên section không được trùng trong cùng workspace
+    // Lấy tất cả các section trong workspace
     const existingSections =
       await this.sectionRepository.findByWorkspaceId(workspaceId);
-    const sectionWithSameName = existingSections.find(
-      (section) => section.name.toLowerCase() === name.toLowerCase(),
-    );
 
-    if (sectionWithSameName) {
-      throw new ConflictException(
-        `A section with the name "${name}" already exists in this workspace`,
+    // Kiểm tra tên section không được trùng trong cùng workspace
+    // Ngoại trừ trường hợp section Direct Messages (mỗi người dùng có một section riêng)
+    if (!isDirectMessages) {
+      const sectionWithSameName = existingSections.find(
+        (section) => section.name.toLowerCase() === name.toLowerCase(),
       );
+
+      if (sectionWithSameName) {
+        throw new ConflictException(
+          `A section with the name "${name}" already exists in this workspace`,
+        );
+      }
+    } else if (isDirectMessages && sectionUserId) {
+      // Kiểm tra xem người dùng đã có section Direct Messages trong workspace này chưa
+      const userDMSection = existingSections.find(
+        (section) =>
+          section.isDirectMessages && section.userId === sectionUserId,
+      );
+
+      if (userDMSection) {
+        throw new ConflictException(
+          `User with ID ${sectionUserId} already has a Direct Messages section in this workspace`,
+        );
+      }
     }
 
     // If this is the default section, check if there's already a default one

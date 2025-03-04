@@ -21,8 +21,9 @@ export interface IWorkspaceService {
   // Member management
   addMember(
     workspaceId: string,
-    userId: string,
+    email: string,
     role?: WorkspaceRole,
+    userId?: string,
   ): Promise<WorkspaceMember>;
   updateMember(
     workspaceId: string,

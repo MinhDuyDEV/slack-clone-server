@@ -11,12 +11,14 @@ import { WorkspaceInvite } from './entities/workspace-invite.entity';
 import { WorkspaceInviteRepository } from './repositories/workspace-invite.repository';
 import { SectionsModule } from '../sections/sections.module';
 import { ChannelsModule } from '../channels/channels.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Workspace, WorkspaceMember, WorkspaceInvite]),
     forwardRef(() => SectionsModule),
     forwardRef(() => ChannelsModule),
+    UsersModule,
   ],
   controllers: [WorkspacesController],
   providers: [

@@ -3,6 +3,7 @@ import { IDeviceInfo } from '../entities/device-info.interface';
 import { RegisterDto } from 'src/modules/auth/dto/register.dto';
 import { IAuthResponse } from '../entities/auth-response.interface';
 import { IRefreshTokenResponse } from '../entities/auth-response.interface';
+import { ITokenPayload } from '../entities/token-payload.interface';
 
 export interface IAuthService {
   register(
@@ -16,4 +17,6 @@ export interface IAuthService {
     deviceInfo?: IDeviceInfo,
   ): Promise<IRefreshTokenResponse>;
   validateUser(email: string, password: string): Promise<User | null>;
+  verifyAccessToken(token: string): Promise<ITokenPayload>;
+  findUser(id: any): Promise<User>;
 }

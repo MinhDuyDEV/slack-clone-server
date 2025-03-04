@@ -23,6 +23,7 @@ import { add } from 'date-fns';
 import { ISectionService } from 'src/core/interfaces/services/section.service.interface';
 import { IChannelService } from 'src/core/interfaces/services/channel.service.interface';
 import { ChannelType } from 'src/core/enums';
+import { IUserService } from 'src/core/interfaces/services/user.service.interface';
 
 @Injectable()
 export class WorkspacesService implements IWorkspaceService {
@@ -34,6 +35,8 @@ export class WorkspacesService implements IWorkspaceService {
     private readonly sectionService: ISectionService,
     @Inject(forwardRef(() => 'IChannelService'))
     private readonly channelService: IChannelService,
+    @Inject(forwardRef(() => 'IUserService'))
+    private readonly userService: IUserService,
   ) {}
 
   async create(
@@ -233,14 +236,25 @@ export class WorkspacesService implements IWorkspaceService {
 
   async addMember(
     workspaceId: string,
-    userId: string,
+    email: string,
     role: WorkspaceRole = WorkspaceRole.MEMBER,
+    inviterId?: string,
   ): Promise<WorkspaceMember> {
+    if (inviterId) {
+      const inviter = await this.userService.findById(inviterId);
+      if (!inviter) {
+        throw new NotFoundException('Inviter not found');
+      }
+    }
     const workspace = await this.findById(workspaceId);
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     const existingMember = await this.workspaceRepository.findMember(
       workspaceId,
-      userId,
+      user.id,
     );
 
     if (existingMember) {
@@ -249,13 +263,13 @@ export class WorkspacesService implements IWorkspaceService {
 
     // Kiểm tra xem người dùng đã có section Direct Messages trong workspace này chưa
     const userDMSection = workspace.sections.find(
-      (section) => section.isDirectMessages && section.userId === userId,
+      (section) => section.isDirectMessages && section.userId === user.id,
     );
 
     const memberData: Partial<IWorkspaceMember> = {
-      userId,
+      userId: user.id,
       role,
-      invitedBy: userId,
+      invitedBy: inviterId,
       status: 'invited',
       joinedAt: new Date(),
     };
@@ -276,10 +290,10 @@ export class WorkspacesService implements IWorkspaceService {
           workspaceId: workspace.id,
           isDirectMessages: true,
           isDefault: false,
-          order: 10000, // Sử dụng khoảng cách 10000 như đã cập nhật
-          userId: userId, // Liên kết section với user
+          order: 10000,
+          userId: user.id,
         },
-        userId,
+        user.id,
       );
       dmSectionId = userDMSection.id;
     } else {
@@ -289,8 +303,8 @@ export class WorkspacesService implements IWorkspaceService {
     // Tạo kênh Direct Message với chính người dùng (self DM)
     await this.channelService.createDirectMessageChannel(
       workspace.id,
-      userId,
-      [userId], // Thêm chính người dùng vào danh sách targetUserIds
+      user.id,
+      [user.id], // Thêm chính người dùng vào danh sách targetUserIds
       dmSectionId,
     );
 

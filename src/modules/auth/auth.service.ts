@@ -24,6 +24,7 @@ import { ITokenPayload } from 'src/core/interfaces/entities/token-payload.interf
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import {
   access_token_private_key,
+  access_token_public_key,
   refresh_token_private_key,
   refresh_token_public_key,
 } from 'src/common/utils/keys.util';
@@ -246,5 +247,19 @@ export class AuthService implements IAuthService {
     }[unit];
 
     return parseInt(value) * multiplier;
+  }
+
+  async verifyAccessToken(token: string): Promise<ITokenPayload> {
+    return await this.jwtService.verifyAsync<ITokenPayload>(token, {
+      algorithms: ['RS256'],
+      publicKey: access_token_public_key,
+    });
+  }
+
+  async findUser(id: any): Promise<User> {
+    const user = await this.userService.findById(id);
+    if (!user) throw new UnauthorizedException('User not found');
+    console.log('user in auth service', user);
+    return user;
   }
 }

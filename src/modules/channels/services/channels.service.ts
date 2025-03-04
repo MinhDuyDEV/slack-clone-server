@@ -118,14 +118,14 @@ export class ChannelsService implements IChannelService {
     return this.channelRepository.findUserChannels(workspaceId, userId);
   }
 
-  async addMember(channelId: string, userId: string): Promise<void> {
+  async addMember(channelId: string, email: string): Promise<void> {
     // Verify channel exists
     await this.findById(channelId);
 
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.findByEmail(email);
     const members = await this.getMembers(channelId);
 
-    if (members.some((member) => member.id === userId)) {
+    if (members.some((member) => member.id === user.id)) {
       throw new ConflictException('User is already a member of this channel');
     }
 

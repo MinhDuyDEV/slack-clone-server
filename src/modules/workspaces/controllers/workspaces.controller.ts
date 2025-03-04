@@ -187,10 +187,11 @@ export class WorkspacesController {
   @WorkspaceRoles(WorkspaceRole.ADMIN, WorkspaceRole.OWNER)
   async addMember(
     @Param('workspaceId') workspaceId: string,
-    @Body('userId') userId: string,
+    @Body('email') email: string,
+    @CurrentUser() user: User,
     @Body('role') role?: WorkspaceRole,
   ) {
-    return this.workspaceService.addMember(workspaceId, userId, role);
+    return this.workspaceService.addMember(workspaceId, email, role, user.id);
   }
 
   @Put(':workspaceId/members/:userId')

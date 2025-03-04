@@ -3,26 +3,28 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import jwtConfig from './config/configurations/jwt.config';
+import appConfig from './config/configurations/app.config';
+import corsConfig from './config/configurations/cors.config';
+import databaseConfig from './config/configurations/database.config';
+import awsConfig from './config/configurations/aws.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AppConfigService } from './config/config.service';
-import jwtConfig from './config/configurations/jwt.config';
-import appConfig from './config/configurations/app.config';
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
-import databaseConfig from './config/configurations/database.config';
-import { validationSchema } from './config/validation/env.validation';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { ChannelsModule } from './modules/channels/channels.module';
 import { SectionsModule } from './modules/sections/sections.module';
 import { MessagesModule } from './modules/messages/messages.module';
-import corsConfig from './config/configurations/cors.config';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { validationSchema } from './config/validation/env.validation';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { EventsModule } from './modules/events/events.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [databaseConfig, jwtConfig, appConfig, corsConfig],
+      load: [databaseConfig, jwtConfig, appConfig, corsConfig, awsConfig],
       validationSchema,
       validationOptions: {
         allowUnknown: true,
@@ -51,6 +53,7 @@ import corsConfig from './config/configurations/cors.config';
     ChannelsModule,
     SectionsModule,
     MessagesModule,
+    EventsModule,
   ],
   providers: [
     AppConfigService,

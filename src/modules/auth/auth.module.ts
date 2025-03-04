@@ -42,6 +42,7 @@ import { RefreshTokensRepository } from './repositories/refresh-token.repository
       provide: 'IRefreshTokenRepository',
       useClass: RefreshTokensRepository,
     },
+    AuthService,
     {
       provide: 'IAuthService',
       useClass: AuthService,
@@ -50,6 +51,6 @@ import { RefreshTokensRepository } from './repositories/refresh-token.repository
     JwtStrategy,
     JwtRefreshStrategy,
   ],
-  exports: [],
+  exports: ['IAuthService', AuthService],
 })
 export class AuthModule {}

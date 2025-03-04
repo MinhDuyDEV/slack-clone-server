@@ -71,9 +71,9 @@ export class ChannelsController {
   @WorkspaceRoles(WorkspaceRole.ADMIN, WorkspaceRole.OWNER)
   async addMember(
     @Param('channelId') channelId: string,
-    @Body('userId') userId: string,
+    @Body('email') email: string,
   ) {
-    await this.channelService.addMember(channelId, userId);
+    await this.channelService.addMember(channelId, email);
     return { message: 'Member added successfully' };
   }
 

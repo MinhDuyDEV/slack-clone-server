@@ -9,5 +9,6 @@ export default registerAs('database', () => ({
   database: process.env.DB_NAME,
   entities: ['dist/**/*.entity{.ts,.js}'],
   synchronize: true,
-  logging: process.env.NODE_ENV === 'development',
+  logging: false,
+  // logging: process.env.NODE_ENV === 'development',
 }));

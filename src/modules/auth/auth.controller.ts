@@ -156,7 +156,7 @@ export class AuthController {
 
       return { message: 'Token refreshed successfully' };
     } catch (error) {
-      this.clearCookies(res);
+      // this.clearCookies(res);
 
       // If token is expired or invalid, return 410 Gone
       if (

@@ -1,11 +1,8 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  ConnectedSocket,
-  MessageBody,
   OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
@@ -55,6 +52,7 @@ export class EventsGateway
   }
 
   handleConnection(socket: AuthenticatedSocket, ...args: any[]): any {
+    Logger.log('args', JSON.stringify(args));
     Logger.log('user connected in socket', JSON.stringify(socket.user));
     Logger.log('handleConnection');
     this.sessions.setUserSocket(socket.user.id, socket);

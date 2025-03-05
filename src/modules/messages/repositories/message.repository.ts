@@ -18,7 +18,8 @@ export class MessageRepository implements IMessageRepository {
 
   async create(createMessageDto: CreateMessageDto): Promise<Message> {
     const message = this.messageRepository.create(createMessageDto);
-    return this.messageRepository.save(message);
+    await this.messageRepository.save(message);
+    return this.findById(message.id);
   }
 
   async findById(id: string): Promise<Message> {

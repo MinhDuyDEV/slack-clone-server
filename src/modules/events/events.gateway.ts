@@ -19,6 +19,7 @@ import { IWorkspaceRepository } from 'src/core/interfaces/repositories/workspace
 import { SocketAuthMiddleware } from './ws.mw';
 import { AuthService } from '../auth/auth.service';
 import { GatewaySessionManager } from './gateway-session-manager';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @WebSocketGateway({
   cors: {
@@ -63,5 +64,130 @@ export class EventsGateway
     Logger.log('user disconnected in socket', JSON.stringify(socket.user));
     Logger.log('handleDisconnect');
     this.sessions.removeUserSocket(socket.user.id);
+  }
+
+  @OnEvent('message.create')
+  async handleMessageCreateEvent(payload: { message: any; channelId: string }) {
+    console.log('handleMessageCreateEvent', payload);
+    const { message, channelId } = payload;
+
+    const members = await this.channelService.getMembers(channelId);
+
+    members.forEach((member) => {
+      const socket = this.sessions.getUserSocket(member.id);
+      if (socket) {
+        socket.emit('onMessage', {
+          type: 'MESSAGE_CREATE',
+          data: message,
+          channelId,
+        });
+      }
+    });
+  }
+
+  @OnEvent('message.update')
+  async handleMessageUpdate(payload: { message: any; channelId: string }) {
+    const { message, channelId } = payload;
+
+    const members = await this.channelService.getMembers(channelId);
+
+    members.forEach((member) => {
+      const socket = this.sessions.getUserSocket(member.id);
+      if (socket) {
+        socket.emit('onMessage', {
+          type: 'MESSAGE_UPDATE',
+          data: message,
+          channelId,
+        });
+      }
+    });
+  }
+
+  @OnEvent('message.delete')
+  async handleMessageDelete(payload: { messageId: string; channelId: string }) {
+    const { messageId, channelId } = payload;
+
+    const members = await this.channelService.getMembers(channelId);
+
+    members.forEach((member) => {
+      const socket = this.sessions.getUserSocket(member.id);
+      if (socket) {
+        socket.emit('onMessage', {
+          type: 'MESSAGE_DELETE',
+          data: { id: messageId },
+          channelId,
+        });
+      }
+    });
+  }
+
+  // Thread Message Events
+  @OnEvent('thread.create')
+  async handleThreadMessageCreate(payload: {
+    message: any;
+    channelId: string;
+    parentId: string;
+  }) {
+    const { message, channelId, parentId } = payload;
+
+    const members = await this.channelService.getMembers(channelId);
+
+    members.forEach((member) => {
+      const socket = this.sessions.getUserSocket(member.id);
+      if (socket) {
+        socket.emit('onThreadMessage', {
+          type: 'THREAD_MESSAGE_CREATE',
+          data: message,
+          channelId,
+          parentId,
+        });
+      }
+    });
+  }
+
+  @OnEvent('thread.update')
+  async handleThreadMessageUpdate(payload: {
+    message: any;
+    channelId: string;
+    parentId: string;
+  }) {
+    const { message, channelId, parentId } = payload;
+
+    const members = await this.channelService.getMembers(channelId);
+
+    members.forEach((member) => {
+      const socket = this.sessions.getUserSocket(member.id);
+      if (socket) {
+        socket.emit('onThreadMessage', {
+          type: 'THREAD_MESSAGE_UPDATE',
+          data: message,
+          channelId,
+          parentId,
+        });
+      }
+    });
+  }
+
+  @OnEvent('thread.delete')
+  async handleThreadMessageDelete(payload: {
+    messageId: string;
+    channelId: string;
+    parentId: string;
+  }) {
+    const { messageId, channelId, parentId } = payload;
+
+    const members = await this.channelService.getMembers(channelId);
+
+    members.forEach((member) => {
+      const socket = this.sessions.getUserSocket(member.id);
+      if (socket) {
+        socket.emit('onThreadMessage', {
+          type: 'THREAD_MESSAGE_DELETE',
+          data: { id: messageId },
+          channelId,
+          parentId,
+        });
+      }
+    });
   }
 }

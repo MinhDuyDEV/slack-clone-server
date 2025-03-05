@@ -23,6 +23,7 @@ import { Request } from 'express';
 import { User } from 'src/modules/users/entities/user.entity';
 import { IMessageService } from '../../../core/interfaces/services/message.service.interface';
 import { MessageResponseDto } from '../dto/message-response.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 interface AuthenticatedRequest extends Request {
   user: User;
@@ -35,6 +36,7 @@ export class MessagesController {
   constructor(
     @Inject('IMessageService')
     private readonly messagesService: IMessageService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Post()
@@ -48,7 +50,14 @@ export class MessagesController {
     createMessageDto.userId = req.user.id;
 
     const message = await this.messagesService.create(createMessageDto);
-    return new MessageResponseDto(message);
+    const responseMessage = new MessageResponseDto(message);
+
+    this.eventEmitter.emit('message.create', {
+      message: responseMessage,
+      channelId,
+    });
+    console.log('message.create', responseMessage);
+    return responseMessage;
   }
 
   @Get()
@@ -87,7 +96,24 @@ export class MessagesController {
       req.user.id,
       updateMessageDto,
     );
-    return new MessageResponseDto(message);
+    const responseMessage = new MessageResponseDto(message);
+
+    if (message.parentId) {
+      this.eventEmitter.emit('thread.update', {
+        message: responseMessage,
+        channelId: message.channelId,
+        parentId: message.parentId,
+      });
+      console.log('thread.update', responseMessage);
+    } else {
+      this.eventEmitter.emit('message.update', {
+        message: responseMessage,
+        channelId: message.channelId,
+      });
+      console.log('message.update', responseMessage);
+    }
+
+    return responseMessage;
   }
 
   @Delete(':id')
@@ -96,7 +122,23 @@ export class MessagesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: AuthenticatedRequest,
   ): Promise<void> {
-    return this.messagesService.delete(id, req.user.id);
+    const message = await this.messagesService.findById(id);
+    await this.messagesService.delete(id, req.user.id);
+
+    if (message.parentId) {
+      this.eventEmitter.emit('thread.delete', {
+        messageId: message.id,
+        channelId: message.channelId,
+        parentId: message.parentId,
+      });
+      console.log('thread.delete', { id, parentId: message.parentId });
+    } else {
+      this.eventEmitter.emit('message.delete', {
+        messageId: message.id,
+        channelId: message.channelId,
+      });
+      console.log('message.delete', { id });
+    }
   }
 
   @Post(':id/reactions')
@@ -156,6 +198,12 @@ export class MessagesController {
     createMessageDto.parentId = parentId;
 
     const message = await this.messagesService.create(createMessageDto);
-    return new MessageResponseDto(message);
+    const responseMessage = new MessageResponseDto(message);
+    this.eventEmitter.emit('thread.create', {
+      message: responseMessage,
+      channelId: message.channelId,
+      parentId: message.parentId,
+    });
+    return responseMessage;
   }
 }

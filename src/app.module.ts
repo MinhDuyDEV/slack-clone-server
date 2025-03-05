@@ -19,6 +19,7 @@ import { validationSchema } from './config/validation/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { EventsModule } from './modules/events/events.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -47,6 +48,7 @@ import { EventsModule } from './modules/events/events.module';
       }),
       inject: [ConfigService],
     }),
+    EventEmitterModule.forRoot(),
     AuthModule,
     UsersModule,
     WorkspacesModule,
